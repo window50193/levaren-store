@@ -2,239 +2,281 @@
 <html lang="tr">
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="utf-8">
 
-    <title>LÉVAREN — Modern Essentials</title>
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  >
 
-    <link rel="stylesheet" href="/style.css">
+  <title>LÉVAREN — Modern Essentials</title>
+
+  <link
+    rel="stylesheet"
+    href="/style.css"
+  >
 </head>
+
 
 <body>
 
-    <div class="announcement">
-        ÜCRETSİZ KARGO · 1.500 TL ÜZERİ SİPARİŞLERDE
+  <!-- DUYURU -->
+  <div class="announcement">
+    ÜCRETSİZ KARGO · 1.500 TL ÜZERİ SİPARİŞLERDE
+  </div>
+
+
+  <!-- HEADER -->
+  <header>
+
+    <a
+      class="logo"
+      href="/"
+    >
+      LÉVAREN
+    </a>
+
+
+    <nav>
+
+      <a href="#products">
+        Koleksiyon
+      </a>
+
+      <a href="#about">
+        Hakkımızda
+      </a>
+
+    </nav>
+
+
+    <div>
+
+      <button id="accountBtn">
+        Hesabım
+      </button>
+
+      <button id="cartBtn">
+        Sepet (
+        <span id="cartCount">0</span>
+        )
+      </button>
+
+    </div>
+
+  </header>
+
+
+
+  <!-- HERO -->
+  <section class="hero">
+
+    <div>
+
+      <p class="eyebrow">
+        AUTUMN / WINTER 2026
+      </p>
+
+
+      <h1>
+        Less noise.<br>
+        <i>More presence.</i>
+      </h1>
+
+
+      <p>
+        Şehir hayatı için rafine kesimler,
+        kaliteli dokular ve zamansız tonlar.
+      </p>
+
+
+      <!-- KOLEKSİYONA GİT BUTONU -->
+      <button
+        class="btn"
+        type="button"
+        onclick="goToCollection()"
+      >
+        Koleksiyonu keşfet →
+      </button>
+
     </div>
 
 
-    <header>
+    <div class="hero-art">
 
-        <a class="logo" href="/">
-            LÉVAREN
-        </a>
+      <span>
+        LÉVAREN
+        <br>
+        <small>
+          STUDIO 01
+        </small>
+      </span>
 
-        <nav>
-            <a href="#products">
-                Koleksiyon
-            </a>
+    </div>
 
-            <a href="#about">
-                Hakkımızda
-            </a>
-        </nav>
-
-        <div>
-
-            <button id="accountBtn">
-                Hesabım
-            </button>
-
-            <button id="cartBtn">
-                Sepet (<span id="cartCount">0</span>)
-            </button>
-
-        </div>
-
-    </header>
+  </section>
 
 
-    <!-- HERO -->
 
-    <section class="hero">
+  <!-- INTRO -->
+  <section class="intro">
 
-        <div>
-
-            <p class="eyebrow">
-                AUTUMN / WINTER 2026
-            </p>
-
-            <h1>
-                Less noise.<br>
-                <i>More presence.</i>
-            </h1>
-
-            <p>
-                Şehir hayatı için rafine kesimler,
-                kaliteli dokular ve zamansız tonlar.
-            </p>
-
-            <a
-                class="btn"
-                href="#products"
-                onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'}); return false;"
-            >
-                Koleksiyonu keşfet →
-            </a>
-
-        </div>
+    <p class="eyebrow">
+      LÉVAREN PHILOSOPHY
+    </p>
 
 
-        <div class="hero-art">
+    <h2>
+      Şehir hayatı için tasarlanmış
+      <i>özgün</i> parçalar.
+    </h2>
 
-            <span>
-                LÉVAREN
-                <br>
-                <small>STUDIO 01</small>
-            </span>
-
-        </div>
-
-    </section>
+  </section>
 
 
-    <!-- PHILOSOPHY -->
 
-    <section class="intro">
+  <!-- PRODUCTS -->
+  <section
+    id="products"
+    class="shop"
+  >
+
+    <div class="section-head">
+
+      <div>
 
         <p class="eyebrow">
-            LÉVAREN PHILOSOPHY
+          SHOP
         </p>
 
         <h2>
-            Şehir hayatı için tasarlanmış
-            <i>özgün</i> parçalar.
+          Seçili parçalar
         </h2>
 
-    </section>
+      </div>
 
 
-    <!-- PRODUCTS -->
+      <!-- FİLTRELER -->
+      <div class="filters">
 
-    <section id="products" class="shop">
-
-        <div class="section-head">
-
-            <div>
-
-                <p class="eyebrow">
-                    SHOP
-                </p>
-
-                <h2>
-                    Seçili parçalar
-                </h2>
-
-            </div>
-
-
-            <div class="filters">
-
-                <button
-                    class="active"
-                    data-cat="all"
-                >
-                    Tümü
-                </button>
-
-                <button data-cat="ust">
-                    Üst Giyim
-                </button>
-
-                <button data-cat="alt">
-                    Alt Giyim
-                </button>
-
-                <button data-cat="aksesuar">
-                    Aksesuar
-                </button>
-
-            </div>
-
-        </div>
-
-
-        <!-- ÜRÜNLER BURAYA GELECEK -->
-
-        <div
-            id="productGrid"
-            class="grid"
+        <button
+          class="active"
+          data-cat="all"
         >
-        </div>
-
-    </section>
-
-
-    <!-- ABOUT -->
-
-    <section
-        id="about"
-        class="about"
-    >
-
-        <div>
-
-            <p class="eyebrow">
-                ABOUT LÉVAREN
-            </p>
-
-            <h2>
-                Detaylarda saklı bir
-                <i>karakter.</i>
-            </h2>
-
-        </div>
+          Tümü
+        </button>
 
 
-        <p>
-            LÉVAREN; sade silüetleri,
-            güçlü detayları ve uzun süre
-            giyilecek parçaları bir araya
-            getiren çağdaş bir giyim
-            markasıdır.
-        </p>
-
-    </section>
+        <button
+          data-cat="ust"
+        >
+          Üst Giyim
+        </button>
 
 
-    <!-- FOOTER -->
-
-    <footer>
-
-        <b>
-            LÉVAREN
-        </b>
-
-        <span>
-            © 2026 LÉVAREN
-        </span>
-
-    </footer>
+        <button
+          data-cat="alt"
+        >
+          Alt Giyim
+        </button>
 
 
-    <!-- MODAL -->
+        <button
+          data-cat="aksesuar"
+        >
+          Aksesuar
+        </button>
 
-    <div
-        id="modal"
-        class="modal hidden"
-    >
-
-        <div class="modal-card">
-
-            <button
-                class="x"
-                onclick="closeModal()"
-            >
-                ×
-            </button>
-
-            <div id="modalBody"></div>
-
-        </div>
+      </div>
 
     </div>
 
 
-    <script src="/app.js"></script>
+    <!-- ÜRÜNLER BURAYA GELECEK -->
+    <div
+      id="productGrid"
+      class="grid"
+    ></div>
+
+  </section>
+
+
+
+  <!-- ABOUT -->
+  <section
+    id="about"
+    class="about"
+  >
+
+    <div>
+
+      <p class="eyebrow">
+        ABOUT LÉVAREN
+      </p>
+
+
+      <h2>
+        Detaylarda saklı bir
+        <i>karakter.</i>
+      </h2>
+
+    </div>
+
+
+    <p>
+      LÉVAREN; sade silüetleri,
+      güçlü detayları ve uzun süre
+      giyilecek parçaları bir araya
+      getiren çağdaş bir giyim
+      markasıdır.
+    </p>
+
+  </section>
+
+
+
+  <!-- FOOTER -->
+  <footer>
+
+    <b>
+      LÉVAREN
+    </b>
+
+
+    <span>
+      © 2026 LÉVAREN
+    </span>
+
+  </footer>
+
+
+
+  <!-- MODAL -->
+  <div
+    id="modal"
+    class="modal hidden"
+  >
+
+    <div class="modal-card">
+
+      <button
+        class="x"
+        onclick="closeModal()"
+      >
+        ×
+      </button>
+
+
+      <div id="modalBody"></div>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- JAVASCRIPT -->
+  <script src="/app.js"></script>
 
 </body>
 
