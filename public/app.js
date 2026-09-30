@@ -236,10 +236,10 @@ function render(list) {
   }
 
 
-  /*
-    FOTOĞRAFLAR PUBLIC KLASÖRÜNDE.
-    ASSETS KLASÖRÜ YOK.
-  */
+  /* =========================
+     PUBLIC KLASÖRÜNDEKİ
+     ÜRÜN GÖRSELLERİ
+  ========================= */
 
   const imageMap = {
 
@@ -271,9 +271,15 @@ function render(list) {
         Number(p.id);
 
 
+      /*
+        ÜRÜN ID'SİNE GÖRE
+        PUBLIC KLASÖRÜNDEKİ
+        GÖRSELİ KULLAN.
+      */
+
       const image =
-        p.image ||
         imageMap[id] ||
+        p.image ||
         "/premium-gomlek.jpg";
 
 
@@ -295,7 +301,12 @@ function render(list) {
           <div
             class="pic ai-pic"
             style="
-              background-image:url('${image}');
+              background-image:
+                url('${image}');
+              background-size: cover;
+              background-position: center;
+              background-repeat: no-repeat;
+              min-height: 340px;
             "
           ></div>
 
