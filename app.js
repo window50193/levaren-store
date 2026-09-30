@@ -14,99 +14,45 @@ let me = null;
    YARDIMCI
 ========================= */
 
-const $ = selector =>
-  document.querySelector(selector);
+const $ = s =>
+  document.querySelector(s);
 
 
-const fmt = number =>
+const fmt = n =>
   new Intl.NumberFormat("tr-TR", {
     style: "currency",
     currency: "TRY",
     maximumFractionDigits: 0
-  }).format(number);
+  }).format(n);
 
 
 /* =========================
    API
 ========================= */
 
-async function api(url, options = {}) {
+async function api(url, opt = {}) {
 
-  const response = await fetch(url, {
+  const r = await fetch(url, {
     headers: {
       "Content-Type": "application/json",
-      ...(options.headers || {})
+      ...(opt.headers || {})
     },
-    ...options
+    ...opt
   });
 
-  const data =
-    await response.json().catch(() => ({}));
+  const d =
+    await r.json().catch(() => ({}));
 
-  if (!response.ok) {
-    throw new Error(
-      data.error || "İşlem başarısız."
+  if (!r.ok) {
+
+    throw Error(
+      d.error || "İşlem başarısız"
     );
+
   }
 
-  return data;
-}
+  return d;
 
-
-/* =========================
-   ÜRÜN GÖRSELLERİ
-========================= */
-
-const imageMap = {
-
-  1: "/premium-gomlek.jpg",
-
-  2: "/premium-kumas-pantolon.jpg",
-
-  3: "/basic-slim-fit-gomlek.jpg",
-
-  4: "/premium-triko.jpg",
-
-  5: "/premium-blazer-ceket.jpg",
-
-  6: "/klasik-gomlek.jpg"
-
-};
-
-
-/* =========================
-   GÖRSEL YOLUNU DÜZELT
-========================= */
-
-function getProductImage(product) {
-
-  if (!product) {
-    return "/premium-gomlek.jpg";
-  }
-
-
-  let image =
-    product.image ||
-    imageMap[product.id];
-
-
-  if (!image) {
-    return "/premium-gomlek.jpg";
-  }
-
-
-  /*
-    Eğer API yanlışlıkla /assets/
-    gönderirse düzelt.
-  */
-
-  image = image.replace(
-    /^\/assets\//,
-    "/"
-  );
-
-
-  return image;
 }
 
 
@@ -154,7 +100,7 @@ async function boot() {
         <div
           style="
             grid-column:1/-1;
-            padding:50px 20px;
+            padding:40px 20px;
             text-align:center;
           "
         >
@@ -199,7 +145,7 @@ async function boot() {
 
 
 /* =========================
-   ÜRÜNLERİ GÖSTER
+   ÜRÜNLER
 ========================= */
 
 function render(list) {
@@ -235,20 +181,59 @@ function render(list) {
     `;
 
     return;
+
   }
 
 
+  /*
+    PUBLIC KLASÖRÜNDEKİ ÜRÜN GÖRSELLERİ
+
+    Dosyalar:
+
+    public/premium-gomlek.jpg
+    public/premium-kumas-pantolon.jpg
+    public/basic-slim-fit-gomlek.jpg
+    public/premium-triko.jpg
+    public/premium-blazer-ceket.jpg
+    public/klasik-gomlek.jpg
+  */
+
+  const imageMap = {
+
+    1:
+      "/premium-gomlek.jpg",
+
+    2:
+      "/premium-kumas-pantolon.jpg",
+
+    3:
+      "/basic-slim-fit-gomlek.jpg",
+
+    4:
+      "/premium-triko.jpg",
+
+    5:
+      "/premium-blazer-ceket.jpg",
+
+    6:
+      "/klasik-gomlek.jpg"
+
+  };
+
+
   grid.innerHTML =
-    list.map(product => {
+    list.map(p => {
 
       const image =
-        getProductImage(product);
+        p.image ||
+        imageMap[p.id] ||
+        "/premium-gomlek.jpg";
 
 
       const categoryName =
-        product.category === "ust"
+        p.category === "ust"
           ? "Üst Giyim"
-          : product.category === "alt"
+          : p.category === "alt"
             ? "Alt Giyim"
             : "Aksesuar";
 
@@ -257,7 +242,7 @@ function render(list) {
 
         <article
           class="card"
-          onclick="productDetail(${product.id})"
+          onclick="product(${p.id})"
         >
 
           <div
@@ -273,7 +258,7 @@ function render(list) {
             <div>
 
               <div>
-                ${product.name}
+                ${p.name}
               </div>
 
 
@@ -283,7 +268,7 @@ function render(list) {
 
                 ·
 
-                ${product.stock}
+                ${p.stock}
 
                 stok
 
@@ -293,7 +278,7 @@ function render(list) {
 
 
             <b>
-              ${fmt(product.price)}
+              ${fmt(p.price)}
             </b>
 
           </div>
@@ -308,25 +293,24 @@ function render(list) {
 
 
 /* =========================
-   ÜRÜN DETAYI
+   ÜRÜN DETAY
 ========================= */
 
-function productDetail(id) {
+function product(id) {
 
-  const product =
+  const p =
     products.find(
-      item => Number(item.id) === Number(id)
+      x => x.id === id
     );
 
 
-  if (!product) return;
+  if (!p) return;
 
 
   const sizes =
-    product.sizes &&
-    product.sizes.length
+    p.sizes && p.sizes.length
 
-      ? product.sizes
+      ? p.sizes
 
       : [
           "S",
@@ -342,26 +326,25 @@ function productDetail(id) {
 
   const firstAvailable =
     sizes.find(
-      item =>
-        Number(item.stock) > 0
+      x => Number(x.stock) > 0
     )?.size;
 
 
   openModal(`
 
     <h2>
-      ${product.name}
+      ${p.name}
     </h2>
 
 
     <p>
-      ${product.description || ""}
+      ${p.description || ""}
     </p>
 
 
     <p>
       <b>
-        ${fmt(product.price)}
+        ${fmt(p.price)}
       </b>
     </p>
 
@@ -375,38 +358,40 @@ function productDetail(id) {
 
       <div
         class="sizes"
-        id="sizes-${product.id}"
+        id="sizes-${p.id}"
       >
 
-        ${sizes.map(item => `
+        ${sizes.map(x => `
 
           <button
             type="button"
-            data-size="${item.size}"
+            data-size="${x.size}"
             class="size-btn ${
-              item.size === firstAvailable
+              x.size === firstAvailable
                 ? "selected"
                 : ""
             }"
+
             ${
-              Number(item.stock) < 1
+              Number(x.stock) < 1
                 ? "disabled"
                 : ""
             }
+
             onclick="
               pickSize(
-                ${product.id},
-                '${item.size}'
+                ${p.id},
+                '${x.size}'
               )
             "
           >
 
-            ${item.size}
+            ${x.size}
 
             <small>
 
               ${
-                Number(item.stock) < 1
+                Number(x.stock) < 1
                   ? " · Tükendi"
                   : ""
               }
@@ -422,38 +407,31 @@ function productDetail(id) {
 
       <button
         class="btn"
+
         ${
           firstAvailable
             ? ""
             : "disabled"
         }
+
         onclick="
           add(
-            ${product.id},
+            ${p.id},
             document.querySelector(
-              '#sizes-${product.id} .selected'
+              '#sizes-${p.id} .selected'
             )?.dataset.size
           )
         "
       >
+
         Sepete Ekle
+
       </button>
 
     </div>
 
   `);
 
-}
-
-
-/*
-  Eski kodda product() çağrısı
-  kullanılmış olabilir.
-  Uyumluluk için bırakıyoruz.
-*/
-
-function product(id) {
-  productDetail(id);
 }
 
 
@@ -497,9 +475,9 @@ function setupFilters() {
           .querySelectorAll(
             ".filters button"
           )
-          .forEach(item => {
+          .forEach(x => {
 
-            item.classList.remove(
+            x.classList.remove(
               "active"
             );
 
@@ -515,7 +493,9 @@ function setupFilters() {
           button.dataset.cat;
 
 
-        if (category === "all") {
+        if (
+          category === "all"
+        ) {
 
           render(products);
 
@@ -523,8 +503,8 @@ function setupFilters() {
 
           render(
             products.filter(
-              item =>
-                item.category === category
+              p =>
+                p.category === category
             )
           );
 
@@ -549,60 +529,12 @@ function goToCollection() {
     );
 
 
-  if (!collection) {
-    return;
-  }
+  if (!collection) return;
 
 
-  /*
-    Header yüksekliği nedeniyle
-    bölümün fazla yukarı kaçmasını
-    engelliyoruz.
-  */
-
-  const header =
-    document.querySelector("header");
-
-
-  const headerHeight =
-    header
-      ? header.offsetHeight
-      : 0;
-
-
-  const announcement =
-    document.querySelector(
-      ".announcement"
-    );
-
-
-  const announcementHeight =
-    announcement
-      ? announcement.offsetHeight
-      : 0;
-
-
-  const offset =
-    headerHeight +
-    announcementHeight +
-    10;
-
-
-  const position =
-    collection.getBoundingClientRect().top +
-    window.pageYOffset -
-    offset;
-
-
-  window.scrollTo({
-
-    top: Math.max(
-      position,
-      0
-    ),
-
-    behavior: "smooth"
-
+  collection.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
   });
 
 }
@@ -622,28 +554,24 @@ function add(
       .toUpperCase();
 
 
-  const existing =
+  const x =
     cart.find(
-      item =>
-        Number(item.id) === Number(id) &&
-        item.size === normalized
+      i =>
+        i.id === id &&
+        i.size === normalized
     );
 
 
-  if (existing) {
+  if (x) {
 
-    existing.qty++;
+    x.qty++;
 
   } else {
 
     cart.push({
-
-      id: Number(id),
-
+      id,
       qty: 1,
-
       size: normalized
-
     });
 
   }
@@ -681,19 +609,19 @@ function updateCart() {
 
   const count =
     cart.reduce(
-      (total, item) =>
-        total + item.qty,
+      (a, x) =>
+        a + x.qty,
       0
     );
 
 
-  const element =
+  const el =
     $("#cartCount");
 
 
-  if (element) {
+  if (el) {
 
-    element.textContent =
+    el.textContent =
       count;
 
   }
@@ -718,23 +646,22 @@ function openCart() {
 
 function openModal(html) {
 
+  const modalBody =
+    $("#modalBody");
+
   const modal =
     $("#modal");
 
 
-  const body =
-    $("#modalBody");
-
-
   if (
-    !modal ||
-    !body
+    !modalBody ||
+    !modal
   ) {
     return;
   }
 
 
-  body.innerHTML =
+  modalBody.innerHTML =
     html;
 
 
@@ -765,32 +692,35 @@ function closeModal() {
    HESAP / SEPET BUTONLARI
 ========================= */
 
-function setupButtons() {
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
 
-  const accountBtn =
-    $("#accountBtn");
+    const accountBtn =
+      $("#accountBtn");
 
 
-  if (accountBtn) {
+    if (accountBtn) {
 
-    accountBtn.onclick =
-      () => account();
+      accountBtn.onclick =
+        () => account();
+
+    }
+
+
+    const cartBtn =
+      $("#cartBtn");
+
+
+    if (cartBtn) {
+
+      cartBtn.onclick =
+        () => cartModal();
+
+    }
 
   }
-
-
-  const cartBtn =
-    $("#cartBtn");
-
-
-  if (cartBtn) {
-
-    cartBtn.onclick =
-      () => cartModal();
-
-  }
-
-}
+);
 
 
 /* =========================
@@ -894,7 +824,6 @@ async function login() {
     await api(
       "/api/login",
       {
-
         method: "POST",
 
         body:
@@ -931,11 +860,9 @@ async function login() {
     account();
 
 
-  } catch (error) {
+  } catch (e) {
 
-    alert(
-      error.message
-    );
+    alert(e.message);
 
   }
 
@@ -1016,7 +943,6 @@ async function register() {
     await api(
       "/api/register",
       {
-
         method: "POST",
 
         body:
@@ -1062,11 +988,9 @@ async function register() {
     account();
 
 
-  } catch (error) {
+  } catch (e) {
 
-    alert(
-      error.message
-    );
+    alert(e.message);
 
   }
 
@@ -1098,11 +1022,9 @@ async function logout() {
     account();
 
 
-  } catch (error) {
+  } catch (e) {
 
-    alert(
-      error.message
-    );
+    alert(e.message);
 
   }
 
@@ -1147,11 +1069,10 @@ async function sendReset() {
 
   try {
 
-    const data =
+    const d =
       await api(
         "/api/forgot-password",
         {
-
           method: "POST",
 
           body:
@@ -1167,18 +1088,16 @@ async function sendReset() {
 
 
     alert(
-      data.message
+      d.message
     );
 
 
     closeModal();
 
 
-  } catch (error) {
+  } catch (e) {
 
-    alert(
-      error.message
-    );
+    alert(e.message);
 
   }
 
@@ -1193,7 +1112,7 @@ async function orders() {
 
   try {
 
-    const orderList =
+    const os =
       await api(
         "/api/orders"
       );
@@ -1207,9 +1126,9 @@ async function orders() {
 
 
       ${
-        orderList.length
+        os.length
 
-          ? orderList.map(order => `
+          ? os.map(o => `
 
               <div
                 class="cartline"
@@ -1217,19 +1136,19 @@ async function orders() {
 
                 <span>
 
-                  ${order.order_no}
+                  ${o.order_no}
 
                   <br>
 
                   <small>
-                    ${order.status}
+                    ${o.status}
                   </small>
 
                 </span>
 
 
                 <b>
-                  ${fmt(order.total)}
+                  ${fmt(o.total)}
                 </b>
 
               </div>
@@ -1247,12 +1166,9 @@ async function orders() {
 
     `);
 
+  } catch (e) {
 
-  } catch (error) {
-
-    alert(
-      error.message
-    );
+    alert(e.message);
 
   }
 
@@ -1267,49 +1183,45 @@ function cartModal() {
 
   const rows =
     cart
-      .map(item => {
+      .map(i => {
 
-        const product =
+        const p =
           products.find(
-            p =>
-              Number(p.id) ===
-              Number(item.id)
+            x => x.id === i.id
           );
 
 
-        if (!product) {
-          return "";
-        }
+        return p
+
+          ? `
+
+            <div
+              class="cartline"
+            >
+
+              <span>
+
+                ${p.name}
+
+                · Beden
+                ${i.size || "M"}
+
+                × ${i.qty}
+
+              </span>
 
 
-        return `
+              <b>
+                ${fmt(
+                  p.price * i.qty
+                )}
+              </b>
 
-          <div
-            class="cartline"
-          >
+            </div>
 
-            <span>
+          `
 
-              ${product.name}
-
-              · Beden
-              ${item.size || "M"}
-
-              × ${item.qty}
-
-            </span>
-
-
-            <b>
-              ${fmt(
-                product.price *
-                item.qty
-              )}
-            </b>
-
-          </div>
-
-        `;
+          : "";
 
       })
       .join("");
@@ -1317,20 +1229,18 @@ function cartModal() {
 
   const total =
     cart.reduce(
-      (sum, item) => {
+      (sum, i) => {
 
-        const product =
+        const p =
           products.find(
-            p =>
-              Number(p.id) ===
-              Number(item.id)
+            x => x.id === i.id
           );
 
 
         return (
           sum +
-          (product?.price || 0) *
-          item.qty
+          (p?.price || 0) *
+          i.qty
         );
 
       },
@@ -1405,4 +1315,178 @@ function checkout() {
   openModal(`
 
     <h2>
-      Teslim
+      Teslimat
+    </h2>
+
+
+    <div class="form">
+
+      <input
+        id="sn"
+        value="${me.first_name} ${me.last_name}"
+        placeholder="Ad Soyad"
+      >
+
+
+      <input
+        id="sp"
+        value="${me.phone || ""}"
+        placeholder="Telefon"
+      >
+
+
+      <textarea
+        id="sa"
+        placeholder="Adres"
+      ></textarea>
+
+
+      <div class="row">
+
+        <input
+          id="sc"
+          placeholder="Şehir"
+        >
+
+
+        <input
+          id="sz"
+          placeholder="Posta Kodu"
+        >
+
+      </div>
+
+
+      <button
+        onclick="pay()"
+      >
+        Ödemeye Geç
+      </button>
+
+    </div>
+
+  `);
+
+}
+
+
+/* =========================
+   ÖDEME
+========================= */
+
+async function pay() {
+
+  try {
+
+    const d =
+      await api(
+        "/api/checkout",
+        {
+          method: "POST",
+
+          body:
+            JSON.stringify({
+
+              items: cart,
+
+              shipping: {
+
+                name:
+                  $("#sn").value,
+
+                phone:
+                  $("#sp").value,
+
+                address:
+                  $("#sa").value,
+
+                city:
+                  $("#sc").value,
+
+                zip:
+                  $("#sz").value
+
+              }
+
+            })
+
+        }
+      );
+
+
+    if (
+      d.paymentConfigured
+    ) {
+
+      openModal(`
+
+        <h2>
+          Güvenli Ödeme
+        </h2>
+
+
+        <div
+          id="iyzipay-checkout-form"
+          class="responsive"
+        ></div>
+
+
+        ${d.checkoutFormContent}
+
+      `);
+
+    } else {
+
+      cart = [];
+
+      save();
+
+
+      openModal(`
+
+        <h2>
+          Sipariş oluşturuldu
+        </h2>
+
+
+        <p>
+          ${d.message}
+        </p>
+
+
+        <p>
+          Sipariş no:
+
+          <b>
+            ${d.orderNo}
+          </b>
+
+        </p>
+
+      `);
+
+    }
+
+  } catch (e) {
+
+    alert(e.message);
+
+  }
+
+}
+
+
+/* =========================
+   SAYFA AÇILINCA
+========================= */
+
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+
+    setupFilters();
+
+    boot();
+
+  }
+);
