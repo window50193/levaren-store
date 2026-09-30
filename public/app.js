@@ -9,6 +9,11 @@ let cart = JSON.parse(
 
 let me = null;
 
+
+/* =========================
+   YARDIMCI
+========================= */
+
 const $ = s => document.querySelector(s);
 
 const fmt = n =>
@@ -16,7 +21,7 @@ const fmt = n =>
     style: "currency",
     currency: "TRY",
     maximumFractionDigits: 0
-  }).format(n);
+  }).format(Number(n) || 0);
 
 
 /* =========================
@@ -33,10 +38,13 @@ async function api(url, opt = {}) {
     ...opt
   });
 
-  const d = await r.json().catch(() => ({}));
+  const d =
+    await r.json().catch(() => ({}));
 
   if (!r.ok) {
-    throw Error(d.error || "İşlem başarısız");
+    throw Error(
+      d.error || "İşlem başarısız"
+    );
   }
 
   return d;
@@ -44,51 +52,123 @@ async function api(url, opt = {}) {
 
 
 /* =========================
-   BAŞLAT
+   SAYFAYI BAŞLAT
 ========================= */
 
 async function boot() {
 
   try {
 
-    products = await api("/api/products");
+    const productResponse =
+      await api("/api/products");
 
-    const meResponse = await api("/api/me");
 
-    me = meResponse.user;
+    /*
+      API farklı şekillerde ürün
+      döndürse bile yakala.
+    */
+
+    if (Array.isArray(productResponse)) {
+
+      products = productResponse;
+
+    } else if (
+      Array.isArray(productResponse.products)
+    ) {
+
+      products =
+        productResponse.products;
+
+    } else if (
+      Array.isArray(productResponse.data)
+    ) {
+
+      products =
+        productResponse.data;
+
+    } else {
+
+      products = [];
+
+    }
+
+
+    console.log(
+      "LÉVAREN ürünleri:",
+      products
+    );
+
+
+    try {
+
+      const meResponse =
+        await api("/api/me");
+
+      me =
+        meResponse.user || null;
+
+    } catch (e) {
+
+      me = null;
+
+      console.log(
+        "Kullanıcı girişi yok."
+      );
+
+    }
+
 
     render(products);
 
     updateCart();
 
+    setupFilters();
+
+
   } catch (error) {
 
-    console.error("LÉVAREN başlatma hatası:", error);
+    console.error(
+      "LÉVAREN başlatma hatası:",
+      error
+    );
 
-    const grid = $("#productGrid");
+
+    const grid =
+      $("#productGrid");
+
 
     if (grid) {
 
       grid.innerHTML = `
-        <div style="
-          grid-column:1/-1;
-          padding:40px 20px;
-          text-align:center;
-        ">
 
-          <p style="
-            font-size:18px;
-            margin-bottom:10px;
-          ">
-            Koleksiyon şu anda yüklenemiyor.
+        <div
+          style="
+            grid-column:1/-1;
+            padding:60px 20px;
+            text-align:center;
+          "
+        >
+
+          <p
+            style="
+              font-size:20px;
+              margin-bottom:12px;
+            "
+          >
+            Koleksiyon yüklenemedi.
           </p>
 
-          <p style="
-            color:#777;
-            font-size:14px;
-          ">
-            Sayfayı yenileyip tekrar deneyin.
+
+          <p
+            style="
+              color:#777;
+              font-size:14px;
+              line-height:1.6;
+            "
+          >
+            Sunucu bağlantısı kontrol ediliyor.
           </p>
+
 
           <button
             class="btn"
@@ -99,7 +179,9 @@ async function boot() {
           </button>
 
         </div>
+
       `;
+
     }
 
   }
@@ -113,130 +195,183 @@ async function boot() {
 
 function render(list) {
 
-  const grid = $("#productGrid");
+  const grid =
+    $("#productGrid");
 
-  if (!grid) return;
 
-  if (!Array.isArray(list) || list.length === 0) {
-
-    grid.innerHTML = `
-      <div style="
-        grid-column:1/-1;
-        padding:50px 20px;
-        text-align:center;
-      ">
-        <p>Bu kategoride ürün bulunamadı.</p>
-      </div>
-    `;
-
+  if (!grid) {
     return;
   }
 
 
-  /*
-    GÖRSELLER DOĞRUDAN PUBLIC KLASÖRÜNDEN
-    YÜKLENİYOR.
+  if (
+    !Array.isArray(list) ||
+    list.length === 0
+  ) {
 
-    assets klasörü YOK.
+    grid.innerHTML = `
+
+      <div
+        style="
+          grid-column:1/-1;
+          padding:70px 20px;
+          text-align:center;
+        "
+      >
+
+        <p
+          style="
+            font-size:18px;
+          "
+        >
+          Bu kategoride ürün bulunamadı.
+        </p>
+
+      </div>
+
+    `;
+
+    return;
+
+  }
+
+
+  /*
+    FOTOĞRAFLAR PUBLIC KLASÖRÜNDE.
+    ASSETS KLASÖRÜ YOK.
   */
 
   const imageMap = {
 
-    1: "/premium-gomlek.jpg",
+    1:
+      "/premium-gomlek.jpg",
 
-    2: "/premium-kumas-pantolon.jpg",
+    2:
+      "/premium-kumas-pantolon.jpg",
 
-    3: "/basic-slim-fit-gomlek.jpg",
+    3:
+      "/basic-slim-fit-gomlek.jpg",
 
-    4: "/premium-triko.jpg",
+    4:
+      "/premium-triko.jpg",
 
-    5: "/premium-blazer-ceket.jpg",
+    5:
+      "/premium-blazer-ceket.jpg",
 
-    6: "/klasik-gomlek.jpg"
+    6:
+      "/klasik-gomlek.jpg"
 
   };
 
 
-  grid.innerHTML = list.map(p => {
+  grid.innerHTML =
+    list.map(p => {
 
-    const image =
-      p.image ||
-      imageMap[p.id] ||
-      "/premium-gomlek.jpg";
-
-
-    return `
-      <article
-        class="card"
-        onclick="product(${p.id})"
-      >
-
-        <div
-          class="pic ai-pic"
-          style="
-            background-image:url('${image}');
-          "
-        ></div>
+      const id =
+        Number(p.id);
 
 
-        <div class="info">
+      const image =
+        p.image ||
+        imageMap[id] ||
+        "/premium-gomlek.jpg";
 
-          <div>
+
+      const categoryName =
+        p.category === "ust"
+          ? "Üst Giyim"
+          : p.category === "alt"
+            ? "Alt Giyim"
+            : "Aksesuar";
+
+
+      return `
+
+        <article
+          class="card"
+          onclick="product(${id})"
+        >
+
+          <div
+            class="pic ai-pic"
+            style="
+              background-image:url('${image}');
+            "
+          ></div>
+
+
+          <div class="info">
 
             <div>
-              ${p.name}
+
+              <div>
+                ${p.name || "LÉVAREN Ürün"}
+              </div>
+
+
+              <div class="meta">
+
+                ${categoryName}
+
+                ·
+
+                ${p.stock ?? 0}
+
+                stok
+
+              </div>
+
             </div>
 
-            <div class="meta">
 
-              ${
-                p.category === "ust"
-                  ? "Üst Giyim"
-                  : p.category === "alt"
-                    ? "Alt Giyim"
-                    : "Aksesuar"
-              }
-
-              · ${p.stock} stok
-
-            </div>
+            <b>
+              ${fmt(p.price)}
+            </b>
 
           </div>
 
+        </article>
 
-          <b>
-            ${fmt(p.price)}
-          </b>
+      `;
 
-        </div>
-
-      </article>
-    `;
-
-  }).join("");
+    }).join("");
 
 }
 
 
 /* =========================
-   ÜRÜN DETAYI
+   ÜRÜN DETAY
 ========================= */
 
 function product(id) {
 
-  const p = products.find(x => x.id === id);
+  const p =
+    products.find(
+      x => Number(x.id) === Number(id)
+    );
 
-  if (!p) return;
+
+  if (!p) {
+    return;
+  }
 
 
   const sizes =
-    p.sizes && p.sizes.length
+    Array.isArray(p.sizes) &&
+    p.sizes.length
+
       ? p.sizes
-      : ["S", "M", "L", "XL", "XXL"]
-          .map(size => ({
-            size,
-            stock: 0
-          }));
+
+      : [
+          "S",
+          "M",
+          "L",
+          "XL",
+          "XXL"
+        ].map(size => ({
+          size,
+          stock: 0
+        }));
 
 
   const firstAvailable =
@@ -248,12 +383,14 @@ function product(id) {
   openModal(`
 
     <h2>
-      ${p.name}
+      ${p.name || "Ürün"}
     </h2>
+
 
     <p>
       ${p.description || ""}
     </p>
+
 
     <p>
       <b>
@@ -284,24 +421,31 @@ function product(id) {
                 ? "selected"
                 : ""
             }"
+
             ${
               Number(x.stock) < 1
                 ? "disabled"
                 : ""
             }
+
             onclick="
-              pickSize(${p.id},'${x.size}')
+              pickSize(
+                ${p.id},
+                '${x.size}'
+              )
             "
           >
 
             ${x.size}
 
             <small>
+
               ${
                 Number(x.stock) < 1
                   ? " · Tükendi"
                   : ""
               }
+
             </small>
 
           </button>
@@ -313,11 +457,13 @@ function product(id) {
 
       <button
         class="btn"
+
         ${
           firstAvailable
             ? ""
             : "disabled"
         }
+
         onclick="
           add(
             ${p.id},
@@ -327,7 +473,9 @@ function product(id) {
           )
         "
       >
+
         Sepete Ekle
+
       </button>
 
     </div>
@@ -347,11 +495,11 @@ function pickSize(id, size) {
     .querySelectorAll(
       `#sizes-${id} .size-btn`
     )
-    .forEach(b => {
+    .forEach(button => {
 
-      b.classList.toggle(
+      button.classList.toggle(
         "selected",
-        b.dataset.size === size
+        button.dataset.size === size
       );
 
     });
@@ -366,7 +514,9 @@ function pickSize(id, size) {
 function setupFilters() {
 
   document
-    .querySelectorAll(".filters button")
+    .querySelectorAll(
+      ".filters button"
+    )
     .forEach(button => {
 
       button.onclick = () => {
@@ -375,18 +525,27 @@ function setupFilters() {
           .querySelectorAll(
             ".filters button"
           )
-          .forEach(x =>
-            x.classList.remove("active")
-          );
+          .forEach(x => {
 
-        button.classList.add("active");
+            x.classList.remove(
+              "active"
+            );
+
+          });
+
+
+        button.classList.add(
+          "active"
+        );
 
 
         const category =
           button.dataset.cat;
 
 
-        if (category === "all") {
+        if (
+          category === "all"
+        ) {
 
           render(products);
 
@@ -394,7 +553,8 @@ function setupFilters() {
 
           render(
             products.filter(
-              p => p.category === category
+              p =>
+                p.category === category
             )
           );
 
@@ -408,19 +568,85 @@ function setupFilters() {
 
 
 /* =========================
+   KOLEKSİYONA GİT
+========================= */
+
+function goToCollection() {
+
+  const collection =
+    document.getElementById(
+      "products"
+    );
+
+
+  if (!collection) {
+    return;
+  }
+
+
+  const header =
+    document.querySelector("header");
+
+
+  const headerHeight =
+    header
+      ? header.offsetHeight
+      : 0;
+
+
+  const announcement =
+    document.querySelector(
+      ".announcement"
+    );
+
+
+  const announcementHeight =
+    announcement
+      ? announcement.offsetHeight
+      : 0;
+
+
+  const extraOffset =
+    headerHeight +
+    announcementHeight +
+    10;
+
+
+  const top =
+    collection.getBoundingClientRect().top +
+    window.pageYOffset -
+    extraOffset;
+
+
+  window.scrollTo({
+
+    top: Math.max(0, top),
+
+    behavior: "smooth"
+
+  });
+
+}
+
+
+/* =========================
    SEPETE EKLE
 ========================= */
 
-function add(id, size = "M") {
+function add(
+  id,
+  size = "M"
+) {
 
   const normalized =
-    String(size || "M").toUpperCase();
+    String(size || "M")
+      .toUpperCase();
 
 
   const x =
     cart.find(
       i =>
-        i.id === id &&
+        Number(i.id) === Number(id) &&
         i.size === normalized
     );
 
@@ -432,9 +658,13 @@ function add(id, size = "M") {
   } else {
 
     cart.push({
-      id,
+
+      id: Number(id),
+
       qty: 1,
+
       size: normalized
+
     });
 
   }
@@ -448,7 +678,7 @@ function add(id, size = "M") {
 
 
 /* =========================
-   SEPET KAYDET
+   SEPETİ KAYDET
 ========================= */
 
 function save() {
@@ -457,6 +687,7 @@ function save() {
     "levaren_cart",
     JSON.stringify(cart)
   );
+
 
   updateCart();
 
@@ -471,16 +702,33 @@ function updateCart() {
 
   const count =
     cart.reduce(
-      (a, x) => a + x.qty,
+      (a, x) =>
+        a + Number(x.qty || 0),
       0
     );
 
 
-  const el = $("#cartCount");
+  const el =
+    $("#cartCount");
+
 
   if (el) {
-    el.textContent = count;
+
+    el.textContent =
+      count;
+
   }
+
+}
+
+
+/* =========================
+   SEPETİ AÇ
+========================= */
+
+function openCart() {
+
+  cartModal();
 
 }
 
@@ -491,16 +739,48 @@ function updateCart() {
 
 function openModal(html) {
 
-  $("#modalBody").innerHTML = html;
+  const modalBody =
+    $("#modalBody");
 
-  $("#modal").classList.remove("hidden");
+  const modal =
+    $("#modal");
+
+
+  if (
+    !modalBody ||
+    !modal
+  ) {
+
+    return;
+
+  }
+
+
+  modalBody.innerHTML =
+    html;
+
+
+  modal.classList.remove(
+    "hidden"
+  );
 
 }
 
 
 function closeModal() {
 
-  $("#modal").classList.add("hidden");
+  const modal =
+    $("#modal");
+
+
+  if (!modal) {
+    return;
+  }
+
+
+  modal.classList.add(
+    "hidden"
+  );
 
 }
 
@@ -508,14 +788,6 @@ function closeModal() {
 /* =========================
    HESAP
 ========================= */
-
-$("#accountBtn").onclick = () =>
-  account();
-
-
-$("#cartBtn").onclick = () =>
-  cartModal();
-
 
 function account() {
 
@@ -526,12 +798,14 @@ function account() {
       ? `
 
         <h2>
-          Merhaba ${me.first_name}
+          Merhaba ${me.first_name || ""}
         </h2>
 
+
         <p>
-          ${me.email}
+          ${me.email || ""}
         </p>
+
 
         <button
           class="btn"
@@ -539,6 +813,7 @@ function account() {
         >
           Siparişlerim
         </button>
+
 
         <button
           class="btn"
@@ -555,6 +830,7 @@ function account() {
           Hesabım
         </h2>
 
+
         <div class="form">
 
           <input
@@ -562,11 +838,13 @@ function account() {
             placeholder="E-posta"
           >
 
+
           <input
             id="lp"
             type="password"
             placeholder="Şifre"
           >
+
 
           <button
             onclick="login()"
@@ -574,11 +852,13 @@ function account() {
             Giriş Yap
           </button>
 
+
           <button
             onclick="registerForm()"
           >
             Hesap Oluştur
           </button>
+
 
           <button
             onclick="forgot()"
@@ -606,31 +886,48 @@ async function login() {
     await api(
       "/api/login",
       {
+
         method: "POST",
 
-        body: JSON.stringify({
-          email: $("#le").value,
-          password: $("#lp").value
-        })
+        body:
+          JSON.stringify({
+
+            email:
+              $("#le").value,
+
+            password:
+              $("#lp").value
+
+          })
 
       }
     );
 
 
     me =
-      (await api("/api/me")).user;
+      (
+        await api(
+          "/api/me"
+        )
+      ).user;
 
 
     closeModal();
 
-    alert("Giriş başarılı.");
+
+    alert(
+      "Giriş başarılı."
+    );
+
 
     account();
 
 
   } catch (e) {
 
-    alert(e.message);
+    alert(
+      e.message
+    );
 
   }
 
@@ -649,6 +946,7 @@ function registerForm() {
       Hesap Oluştur
     </h2>
 
+
     <div class="form">
 
       <div class="row">
@@ -657,6 +955,7 @@ function registerForm() {
           id="rf"
           placeholder="Ad"
         >
+
 
         <input
           id="rl"
@@ -709,45 +1008,57 @@ async function register() {
     await api(
       "/api/register",
       {
+
         method: "POST",
 
-        body: JSON.stringify({
+        body:
+          JSON.stringify({
 
-          firstName:
-            $("#rf").value,
+            firstName:
+              $("#rf").value,
 
-          lastName:
-            $("#rl").value,
+            lastName:
+              $("#rl").value,
 
-          email:
-            $("#re").value,
+            email:
+              $("#re").value,
 
-          password:
-            $("#rp").value,
+            password:
+              $("#rp").value,
 
-          phone:
-            $("#rphone").value
+            phone:
+              $("#rphone").value
 
-        })
+          })
 
       }
     );
 
 
     me =
-      (await api("/api/me")).user;
+      (
+        await api(
+          "/api/me"
+        )
+      ).user;
 
 
     closeModal();
 
-    alert("Hesabınız oluşturuldu.");
+
+    alert(
+      "Hesabınız oluşturuldu."
+    );
+
 
     account();
 
 
   } catch (e) {
 
-    alert(e.message);
+    alert(
+      e.message
+    );
 
   }
 
@@ -760,73 +1071,32 @@ async function register() {
 
 async function logout() {
 
-  await api(
-    "/api/logout",
-    {
-      method: "POST"
-    }
-  );
+  try {
 
-  me = null;
-
-  closeModal();
-
-  account();
-
-}
-
-
-/* =========================
-   ŞİFRE UNUTTUM
-========================= */
-
-function forgot() {
-
-  openModal(`
-
-    <h2>
-      Şifre yenile
-    </h2>
-
-    <div class="form">
-
-      <input
-        id="fe"
-        placeholder="E-posta"
-      >
-
-      <button
-        onclick="sendReset()"
-      >
-        Bağlantı Gönder
-      </button>
-
-    </div>
-
-  `);
-
-}
-
-
-async function sendReset() {
-
-  const d =
     await api(
-      "/api/forgot-password",
+      "/api/logout",
       {
-        method: "POST",
-
-        body: JSON.stringify({
-          email: $("#fe").value
-        })
-
+        method: "POST"
       }
     );
 
 
-  alert(d.message);
+    me = null;
 
-  closeModal();
+
+    closeModal();
+
+
+    account();
+
+
+  } catch (e) {
+
+    alert(
+      e.message
+    );
+
+  }
 
 }
 
