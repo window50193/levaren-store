@@ -59,22 +59,25 @@ CREATE TABLE IF NOT EXISTS product_size_stock(
 );
 `);
 const seed=[
-["No. 01 Oversize Blazer","oversize-blazer","Antrasit, rahat kesim premium blazer.",3290,"ust",20,""],
-["Essential Cotton Shirt","essential-cotton-shirt","Günlük kullanım için pamuklu gömlek.",1490,"ust",30,""],
-["Relaxed Tailored Trousers","relaxed-tailored-trousers","Stone tonunda rahat kesim pantolon.",2190,"alt",25,""],
-["Studio Knit Sweater","studio-knit-sweater","Yumuşak dokulu minimal triko.",1890,"ust",18,""],
-["Wide Leg Denim","wide-leg-denim","Washed black geniş paça denim.",1990,"alt",24,""],
-["Minimal Leather Belt","minimal-leather-belt","Hakiki deri minimal kemer.",890,"aksesuar",40,""],
-["Lévaren Signature Coat","signature-coat","Sınırlı üretim taupe palto.",4890,"ust",10,""],
-["Everyday Cap","everyday-cap","Minimal logo detaylı günlük şapka.",690,"aksesuar",50,""]
+["Premium Gömlek","premium-gomlek","LÉVAREN Premium Gömlek; modern kesimi ve yüksek kaliteli pamuk karışımlı kumaşıyla gün boyu konfor sunar.",2499,"ust",20,"/assets/premium-gomlek.jpg"],
+["Premium Kumaş Pantolon","premium-kumas-pantolon","LÉVAREN Premium Kumaş Pantolon; modern kesimi ve esnek yapısıyla hareket özgürlüğü sunar.",2999,"alt",20,"/assets/premium-kumas-pantolon.jpg"],
+["Basic Slim Fit Gömlek","basic-slim-fit-gomlek","Vücuda oturan modern kesimi ve minimalist tasarımıyla günlük kullanıma uygun zamansız siyah gömlek.",2299,"ust",20,"/assets/basic-slim-fit-gomlek.jpg"],
+["Premium Triko","premium-triko","Yumuşak dokusu ve modern kesimiyle soğuk havalarda sıcak tutan, zamansız siyah triko.",2699,"ust",20,"/assets/premium-triko.jpg"],
+["Premium Blazer Ceket","premium-blazer-ceket","Kaliteli kumaşı ve kusursuz kesimiyle özel davetlerden günlük şehir stiline kadar kullanılabilen modern blazer ceket.",4499,"ust",20,"/assets/premium-blazer-ceket.jpg"],
+["Klasik Gömlek","klasik-gomlek","Sade ve zarif tasarımıyla her ortamda şıklığını koruyan, zamansız siyah klasik gömlek.",2199,"ust",20,"/assets/klasik-gomlek.jpg"]
 ];
 const count=db.prepare("SELECT COUNT(*) c FROM products").get().c;
 if(!count){const ins=db.prepare("INSERT INTO products(name,slug,description,price,category,stock,image) VALUES(?,?,?,?,?,?,?)");const tx=db.transaction(()=>seed.forEach(p=>ins.run(...p)));tx();}
+// Keep the catalog in sync after redeploys, including an already-existing Railway database.
+const syncProduct=db.prepare("UPDATE products SET name=?, description=?, price=?, category=?, stock=?, image=?, active=1 WHERE id=?");
+seed.forEach((p,i)=>syncProduct.run(p[0],p[2],p[3],p[4],p[5],p[6],i+1));
+if(db.prepare("SELECT id FROM products WHERE id=7").get()) db.prepare("UPDATE products SET active=0 WHERE id>=7").run();
 const sizeSeed=db.prepare("INSERT OR IGNORE INTO product_size_stock(product_id,size,stock) VALUES(?,?,?)");
-const allProducts=db.prepare("SELECT id,stock FROM products").all();
+const allProducts=db.prepare("SELECT id,stock FROM products WHERE id<=6").all();
 const seedSizes=db.transaction(()=>allProducts.forEach(p=>["S","M","L","XL","XXL"].forEach(sz=>seedSizesForProduct(p.id,sz,p.stock))));
-function seedSizesForProduct(id,sz,total){ const each=Math.floor(total/5), extra=total%5; const n=each+(sz==="M"?extra:0); sizeSeed.run(id,sz,n); }
+function seedSizesForProduct(id,sz,total){ const existing=db.prepare("SELECT stock FROM product_size_stock WHERE product_id=? AND size=?").get(id,sz); if(!existing) { const each=Math.floor(total/5), extra=total%5; const n=each+(sz==="M"?extra:0); sizeSeed.run(id,sz,n); } }
 seedSizes();
+
 const adminEmail=(process.env.ADMIN_EMAIL||"admin@levaren.com").toLowerCase();
 if(process.env.ADMIN_PASSWORD && !db.prepare("SELECT id FROM users WHERE email=?").get(adminEmail)){
   const hash=bcrypt.hashSync(process.env.ADMIN_PASSWORD,12);
