@@ -1,6 +1,11 @@
 let products = [];
-let cart = JSON.parse(localStorage.getItem("levaren_cart") || "[]")
-  .map(i => ({ ...i, size: i.size || "M" }));
+
+let cart = JSON.parse(
+  localStorage.getItem("levaren_cart") || "[]"
+).map(i => ({
+  ...i,
+  size: i.size || "M"
+}));
 
 let me = null;
 
@@ -19,6 +24,7 @@ const fmt = n =>
 ========================= */
 
 async function api(url, opt = {}) {
+
   const r = await fetch(url, {
     headers: {
       "Content-Type": "application/json",
@@ -62,17 +68,25 @@ async function boot() {
     const grid = $("#productGrid");
 
     if (grid) {
+
       grid.innerHTML = `
         <div style="
           grid-column:1/-1;
           padding:40px 20px;
           text-align:center;
         ">
-          <p style="font-size:18px;margin-bottom:10px;">
+
+          <p style="
+            font-size:18px;
+            margin-bottom:10px;
+          ">
             Koleksiyon şu anda yüklenemiyor.
           </p>
 
-          <p style="color:#777;font-size:14px;">
+          <p style="
+            color:#777;
+            font-size:14px;
+          ">
             Sayfayı yenileyip tekrar deneyin.
           </p>
 
@@ -83,6 +97,7 @@ async function boot() {
           >
             Tekrar Dene
           </button>
+
         </div>
       `;
     }
@@ -118,19 +133,26 @@ function render(list) {
   }
 
 
+  /*
+    GÖRSELLER DOĞRUDAN PUBLIC KLASÖRÜNDEN
+    YÜKLENİYOR.
+
+    assets klasörü YOK.
+  */
+
   const imageMap = {
 
-    1: "/assets/premium-gomlek.jpg",
+    1: "/premium-gomlek.jpg",
 
-    2: "/assets/premium-kumas-pantolon.jpg",
+    2: "/premium-kumas-pantolon.jpg",
 
-    3: "/assets/basic-slim-fit-gomlek.jpg",
+    3: "/basic-slim-fit-gomlek.jpg",
 
-    4: "/assets/premium-triko.jpg",
+    4: "/premium-triko.jpg",
 
-    5: "/assets/premium-blazer-ceket.jpg",
+    5: "/premium-blazer-ceket.jpg",
 
-    6: "/assets/klasik-gomlek.jpg"
+    6: "/klasik-gomlek.jpg"
 
   };
 
@@ -140,7 +162,7 @@ function render(list) {
     const image =
       p.image ||
       imageMap[p.id] ||
-      "/assets/levaren-6-products-showcase.png";
+      "/premium-gomlek.jpg";
 
 
     return `
@@ -181,6 +203,7 @@ function render(list) {
 
           </div>
 
+
           <b>
             ${fmt(p.price)}
           </b>
@@ -217,7 +240,9 @@ function product(id) {
 
 
   const firstAvailable =
-    sizes.find(x => Number(x.stock) > 0)?.size;
+    sizes.find(
+      x => Number(x.stock) > 0
+    )?.size;
 
 
   openModal(`
@@ -319,7 +344,9 @@ function product(id) {
 function pickSize(id, size) {
 
   document
-    .querySelectorAll(`#sizes-${id} .size-btn`)
+    .querySelectorAll(
+      `#sizes-${id} .size-btn`
+    )
     .forEach(b => {
 
       b.classList.toggle(
@@ -345,7 +372,9 @@ function setupFilters() {
       button.onclick = () => {
 
         document
-          .querySelectorAll(".filters button")
+          .querySelectorAll(
+            ".filters button"
+          )
           .forEach(x =>
             x.classList.remove("active")
           );
@@ -802,356 +831,4 @@ async function sendReset() {
 }
 
 
-/* =========================
-   SİPARİŞLER
-========================= */
-
-async function orders() {
-
-  try {
-
-    const os =
-      await api("/api/orders");
-
-
-    openModal(`
-
-      <h2>
-        Siparişlerim
-      </h2>
-
-      ${
-        os.length
-
-          ? os.map(o => `
-
-              <div class="cartline">
-
-                <span>
-
-                  ${o.order_no}
-
-                  <br>
-
-                  <small>
-                    ${o.status}
-                  </small>
-
-                </span>
-
-                <b>
-                  ${fmt(o.total)}
-                </b>
-
-              </div>
-
-            `).join("")
-
-          : "<p>Henüz sipariş yok.</p>"
-      }
-
-    `);
-
-  } catch (e) {
-
-    alert(e.message);
-
-  }
-
-}
-
-
-/* =========================
-   SEPET
-========================= */
-
-function cartModal() {
-
-  const rows =
-    cart
-      .map(i => {
-
-        const p =
-          products.find(
-            x => x.id === i.id
-          );
-
-
-        return p
-
-          ? `
-
-            <div class="cartline">
-
-              <span>
-                ${p.name}
-                · Beden ${i.size || "M"}
-                × ${i.qty}
-              </span>
-
-              <b>
-                ${fmt(p.price * i.qty)}
-              </b>
-
-            </div>
-
-          `
-
-          : "";
-
-      })
-      .join("");
-
-
-  const total =
-    cart.reduce(
-
-      (s, i) =>
-
-        s +
-        (
-          products.find(
-            p => p.id === i.id
-          )?.price || 0
-        ) *
-        i.qty,
-
-      0
-
-    );
-
-
-  openModal(`
-
-    <h2>
-      Sepetim
-    </h2>
-
-    ${
-      rows ||
-      "<p>Sepet boş.</p>"
-    }
-
-    <hr>
-
-    <p>
-      <b>
-        Toplam: ${fmt(total)}
-      </b>
-    </p>
-
-    ${
-      cart.length
-
-        ? `
-          <button
-            class="btn"
-            onclick="checkout()"
-          >
-            Satın Almaya Devam Et
-          </button>
-        `
-
-        : ""
-    }
-
-  `);
-
-}
-
-
-/* =========================
-   CHECKOUT
-========================= */
-
-function checkout() {
-
-  if (!me) {
-
-    account();
-
-    return;
-
-  }
-
-
-  openModal(`
-
-    <h2>
-      Teslimat
-    </h2>
-
-    <div class="form">
-
-      <input
-        id="sn"
-        value="${me.first_name} ${me.last_name}"
-        placeholder="Ad Soyad"
-      >
-
-      <input
-        id="sp"
-        value="${me.phone || ""}"
-        placeholder="Telefon"
-      >
-
-      <textarea
-        id="sa"
-        placeholder="Adres"
-      ></textarea>
-
-      <div class="row">
-
-        <input
-          id="sc"
-          placeholder="Şehir"
-        >
-
-        <input
-          id="sz"
-          placeholder="Posta Kodu"
-        >
-
-      </div>
-
-      <button
-        onclick="pay()"
-      >
-        Ödemeye Geç
-      </button>
-
-    </div>
-
-  `);
-
-}
-
-
-/* =========================
-   ÖDEME
-========================= */
-
-async function pay() {
-
-  try {
-
-    const d =
-      await api(
-        "/api/checkout",
-        {
-          method: "POST",
-
-          body: JSON.stringify({
-
-            items: cart,
-
-            shipping: {
-
-              name:
-                $("#sn").value,
-
-              phone:
-                $("#sp").value,
-
-              address:
-                $("#sa").value,
-
-              city:
-                $("#sc").value,
-
-              zip:
-                $("#sz").value
-
-            }
-
-          })
-
-        }
-      );
-
-
-    if (d.paymentConfigured) {
-
-      openModal(`
-
-        <h2>
-          Güvenli Ödeme
-        </h2>
-
-        <div
-          id="iyzipay-checkout-form"
-          class="responsive"
-        ></div>
-
-        ${d.checkoutFormContent}
-
-      `);
-
-    } else {
-
-      cart = [];
-
-      save();
-
-      openModal(`
-
-        <h2>
-          Sipariş oluşturuldu
-        </h2>
-
-        <p>
-          ${d.message}
-        </p>
-
-        <p>
-          Sipariş no:
-          <b>${d.orderNo}</b>
-        </p>
-
-      `);
-
-    }
-
-  } catch (e) {
-
-    alert(e.message);
-
-  }
-
-}
-
-
-/* =========================
-   KOLEKSİYONA GİT
-========================= */
-
-function goToCollection() {
-
-  const collection =
-    document.getElementById("products");
-
-  if (!collection) return;
-
-
-  collection.scrollIntoView({
-    behavior: "smooth",
-    block: "start"
-  });
-
-}
-
-
-/* =========================
-   SAYFA AÇILINCA
-========================= */
-
-document.addEventListener(
-  "DOMContentLoaded",
-  () => {
-
-    setupFilters();
-
-    boot();
-
-  }
-);
+/* =================
