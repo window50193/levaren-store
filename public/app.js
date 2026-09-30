@@ -1,6 +1,7 @@
-  /* =========================================================
+/* =========================================================
    LÉVAREN — APP.JS
-   ========================================================= */
+   Ürünler + Görseller + Filtreler + Sepet + Hesap
+========================================================= */
 
 let products = [];
 
@@ -16,9 +17,10 @@ let me = null;
 
 /* =========================================================
    YARDIMCI FONKSİYONLAR
-   ========================================================= */
+========================================================= */
 
-const $ = selector => document.querySelector(selector);
+const $ = selector =>
+  document.querySelector(selector);
 
 
 const fmt = number =>
@@ -31,7 +33,7 @@ const fmt = number =>
 
 /* =========================================================
    API
-   ========================================================= */
+========================================================= */
 
 async function api(url, options = {}) {
 
@@ -43,48 +45,35 @@ async function api(url, options = {}) {
     ...options
   });
 
-
   const data =
-    await response
-      .json()
-      .catch(() => ({}));
-
+    await response.json().catch(() => ({}));
 
   if (!response.ok) {
-
     throw new Error(
-      data.error ||
-      data.message ||
-      "İşlem başarısız."
+      data.error || "İşlem başarısız."
     );
-
   }
 
-
   return data;
-
 }
 
 
 /* =========================================================
    ÜRÜN GÖRSELLERİ
-   ========================================================= */
+========================================================= */
 
 /*
-   Görseller public klasöründe bulunmalı.
+  BU DOSYALAR public klasörünün içinde olacak:
 
-   Örnek:
+  /premium-gomlek.jpg
+  /premium-kumas-pantolon.jpg
+  /basic-slim-fit-gomlek.jpg
+  /premium-triko.jpg
+  /premium-blazer-ceket.jpg
+  /klasik-gomlek.jpg
 
-   public/
-   ├── index.html
-   ├── app.js
-   ├── style.css
-   ├── premium-gomlek.jpg
-   ├── premium-kumas-pantolon.jpg
-   ├── basic-slim-fit-gomlek.jpg
-   ├── premium-triko.jpg
-   ├── premium-blazer-ceket.jpg
-   └── klasik-gomlek.jpg
+  Daha sonra kendi gerçek ürün fotoğraflarımızı
+  bu dosya isimleriyle değiştireceğiz.
 */
 
 const imageMap = {
@@ -106,15 +95,15 @@ const imageMap = {
 
 /* =========================================================
    SAYFAYI BAŞLAT
-   ========================================================= */
+========================================================= */
 
 async function boot() {
 
   try {
 
-    /* -----------------------------------------
-       ÜRÜNLER
-    ----------------------------------------- */
+    /* -------------------------
+       ÜRÜNLERİ AL
+    ------------------------- */
 
     const productResponse =
       await api("/api/products");
@@ -157,9 +146,9 @@ async function boot() {
     );
 
 
-    /* -----------------------------------------
+    /* -------------------------
        KULLANICI
-    ----------------------------------------- */
+    ------------------------- */
 
     try {
 
@@ -175,23 +164,18 @@ async function boot() {
 
       me = null;
 
-      console.log(
-        "Kullanıcı giriş yapmamış."
-      );
-
     }
 
 
-    /* -----------------------------------------
-       SAYFAYI OLUŞTUR
-    ----------------------------------------- */
+    /* -------------------------
+       SAYFAYI ÇİZ
+    ------------------------- */
 
     render(products);
 
     updateCart();
 
     setupFilters();
-
 
   }
 
@@ -214,7 +198,7 @@ async function boot() {
         <div
           style="
             grid-column:1/-1;
-            padding:70px 20px;
+            padding:60px 20px;
             text-align:center;
           "
         >
@@ -222,28 +206,24 @@ async function boot() {
           <p
             style="
               font-size:20px;
-              margin:0 0 12px;
+              margin-bottom:12px;
             "
           >
             Koleksiyon yüklenemedi.
           </p>
 
-
           <p
             style="
               color:#777;
               font-size:14px;
-              line-height:1.6;
             "
           >
-            Sunucu bağlantısı kontrol ediliyor.
+            Sunucu bağlantısını kontrol edin.
           </p>
-
 
           <button
             class="btn"
             onclick="location.reload()"
-            style="margin-top:20px;"
           >
             Tekrar Dene
           </button>
@@ -260,8 +240,8 @@ async function boot() {
 
 
 /* =========================================================
-   ÜRÜNLERİ RENDER ET
-   ========================================================= */
+   ÜRÜNLERİ GÖSTER
+========================================================= */
 
 function render(list) {
 
@@ -289,12 +269,7 @@ function render(list) {
         "
       >
 
-        <p
-          style="
-            font-size:18px;
-            margin:0;
-          "
-        >
+        <p>
           Bu kategoride ürün bulunamadı.
         </p>
 
@@ -307,111 +282,108 @@ function render(list) {
   }
 
 
-  grid.innerHTML = list.map(productItem => {
+  grid.innerHTML =
+    list.map(productItem => {
 
-    const id =
-      Number(productItem.id);
-
-
-    /*
-       Önce veritabanındaki image kullanılır.
-       Yoksa ID'ye göre bizim görsel kullanılır.
-    */
-
-    const image =
-      productItem.image ||
-      imageMap[id] ||
-      "/premium-gomlek.jpg";
+      const id =
+        Number(productItem.id);
 
 
-    let categoryName =
-      "Aksesuar";
+      /*
+        Önce veritabanındaki image değerini kullan.
+        Yoksa imageMap içindeki dosyayı kullan.
+      */
+
+      const image =
+        productItem.image ||
+        imageMap[id] ||
+        "/premium-gomlek.jpg";
 
 
-    if (
-      productItem.category === "ust"
-    ) {
-
-      categoryName =
-        "Üst Giyim";
-
-    }
-
-    else if (
-      productItem.category === "alt"
-    ) {
-
-      categoryName =
-        "Alt Giyim";
-
-    }
+      let categoryName =
+        "Aksesuar";
 
 
-    return `
+      if (
+        productItem.category === "ust"
+      ) {
 
-      <article
-        class="card"
-        onclick="product(${id})"
-      >
+        categoryName =
+          "Üst Giyim";
 
-        <div
-          class="pic ai-pic"
-          style="
-            background-image:
-              url('${image}');
-          "
-          aria-label="${
-            productItem.name ||
-            "LÉVAREN ürün"
-          }"
-        ></div>
+      }
+
+      else if (
+        productItem.category === "alt"
+      ) {
+
+        categoryName =
+          "Alt Giyim";
+
+      }
 
 
-        <div class="info">
+      return `
 
-          <div>
+        <article
+          class="card"
+          onclick="product(${id})"
+        >
+
+          <div
+            class="pic ai-pic"
+            style="
+              background-image:url('${image}');
+            "
+          ></div>
+
+
+          <div class="info">
 
             <div>
-              ${
-                productItem.name ||
-                "LÉVAREN Ürün"
-              }
+
+              <div>
+                ${
+                  productItem.name ||
+                  "LÉVAREN Ürün"
+                }
+              </div>
+
+              <div class="meta">
+
+                ${categoryName}
+
+                ·
+
+                ${
+                  productItem.stock ?? 0
+                }
+
+                stok
+
+              </div>
+
             </div>
 
 
-            <div class="meta">
-
-              ${categoryName}
-
-              ·
-
-              ${productItem.stock ?? 0}
-
-              stok
-
-            </div>
+            <b>
+              ${fmt(productItem.price)}
+            </b>
 
           </div>
 
+        </article>
 
-          <b>
-            ${fmt(productItem.price)}
-          </b>
+      `;
 
-        </div>
-
-      </article>
-
-    `;
-
-  }).join("");
+    }).join("");
 
 }
 
 
 /* =========================================================
-   ÜRÜN DETAY
-   ========================================================= */
+   ÜRÜN DETAYI
+========================================================= */
 
 function product(id) {
 
@@ -473,15 +445,9 @@ function product(id) {
   openModal(`
 
     <img
-      class="product-modal-img"
       src="${image}"
-      alt="${
-        selectedProduct.name ||
-        "LÉVAREN ürün"
-      }"
-      onerror="
-        this.src='/premium-gomlek.jpg'
-      "
+      class="product-modal-img"
+      alt="${selectedProduct.name || "LÉVAREN Ürün"}"
     >
 
 
@@ -496,7 +462,7 @@ function product(id) {
     <p>
       ${
         selectedProduct.description ||
-        "LÉVAREN koleksiyonundan seçilmiş özel parça."
+        "LÉVAREN koleksiyonundan özel parça."
       }
     </p>
 
@@ -520,65 +486,58 @@ function product(id) {
         id="sizes-${selectedProduct.id}"
       >
 
-        ${
-          sizes.map(item => {
+        ${sizes.map(item => `
 
-            const size =
-              String(item.size);
+          <button
+            type="button"
+            class="
+              size-btn
+              ${
+                item.size === firstAvailable
+                  ? "selected"
+                  : ""
+              }
+            "
+            data-size="${item.size}"
 
+            ${
+              Number(item.stock) < 1
+                ? "disabled"
+                : ""
+            }
 
-            const stock =
-              Number(item.stock) || 0;
+            onclick="
+              pickSize(
+                ${selectedProduct.id},
+                '${item.size}'
+              )
+            "
+          >
 
+            ${item.size}
 
-            return `
+            ${
+              Number(item.stock) < 1
+                ? "<small> · Tükendi</small>"
+                : ""
+            }
 
-              <button
-                type="button"
-                data-size="${size}"
-                class="size-btn ${
-                  size === firstAvailable
-                    ? "selected"
-                    : ""
-                }"
-                ${
-                  stock < 1
-                    ? "disabled"
-                    : ""
-                }
-                onclick="
-                  pickSize(
-                    ${selectedProduct.id},
-                    '${size}'
-                  )
-                "
-              >
+          </button>
 
-                ${size}
-
-                ${
-                  stock < 1
-                    ? "<small> · Tükendi</small>"
-                    : ""
-                }
-
-              </button>
-
-            `;
-
-          }).join("")
-        }
+        `).join("")}
 
       </div>
 
 
       <button
         class="btn"
+
         ${
           firstAvailable
             ? ""
             : "disabled"
         }
+
         onclick="
           add(
             ${selectedProduct.id},
@@ -588,7 +547,9 @@ function product(id) {
           )
         "
       >
+
         Sepete Ekle
+
       </button>
 
     </div>
@@ -600,7 +561,7 @@ function product(id) {
 
 /* =========================================================
    BEDEN SEÇ
-   ========================================================= */
+========================================================= */
 
 function pickSize(id, size) {
 
@@ -622,68 +583,67 @@ function pickSize(id, size) {
 
 /* =========================================================
    FİLTRELER
-   ========================================================= */
+========================================================= */
 
 function setupFilters() {
 
-  const buttons =
-    document.querySelectorAll(
-      ".filters button"
-    );
+  document
+    .querySelectorAll(".filters button")
+    .forEach(button => {
+
+      button.onclick = () => {
+
+        document
+          .querySelectorAll(
+            ".filters button"
+          )
+          .forEach(item => {
+
+            item.classList.remove(
+              "active"
+            );
+
+          });
 
 
-  buttons.forEach(button => {
-
-    button.onclick = () => {
-
-      buttons.forEach(item => {
-
-        item.classList.remove(
+        button.classList.add(
           "active"
         );
 
-      });
+
+        const category =
+          button.dataset.cat;
 
 
-      button.classList.add(
-        "active"
-      );
+        if (
+          category === "all"
+        ) {
 
+          render(products);
 
-      const category =
-        button.dataset.cat;
+        }
 
+        else {
 
-      if (
-        category === "all"
-      ) {
+          render(
+            products.filter(
+              item =>
+                item.category === category
+            )
+          );
 
-        render(products);
+        }
 
-        return;
+      };
 
-      }
-
-
-      const filtered =
-        products.filter(
-          item =>
-            item.category === category
-        );
-
-
-      render(filtered);
-
-    };
-
-  });
+    });
 
 }
 
 
 /* =========================================================
    KOLEKSİYONA GİT
-   ========================================================= */
+========================================================= */
 
 function goToCollection() {
 
@@ -736,11 +696,9 @@ function goToCollection() {
 
   window.scrollTo({
 
-    top:
-      Math.max(0, top),
+    top: Math.max(0, top),
 
-    behavior:
-      "smooth"
+    behavior: "smooth"
 
   });
 
@@ -749,12 +707,9 @@ function goToCollection() {
 
 /* =========================================================
    SEPETE EKLE
-   ========================================================= */
+========================================================= */
 
-function add(
-  id,
-  size = "M"
-) {
+function add(id, size = "M") {
 
   const normalizedSize =
     String(size || "M")
@@ -771,8 +726,7 @@ function add(
 
   if (existing) {
 
-    existing.qty =
-      Number(existing.qty || 0) + 1;
+    existing.qty++;
 
   }
 
@@ -780,14 +734,11 @@ function add(
 
     cart.push({
 
-      id:
-        Number(id),
+      id: Number(id),
 
-      qty:
-        1,
+      qty: 1,
 
-      size:
-        normalizedSize
+      size: normalizedSize
 
     });
 
@@ -803,7 +754,7 @@ function add(
 
 /* =========================================================
    SEPETİ KAYDET
-   ========================================================= */
+========================================================= */
 
 function save() {
 
@@ -820,7 +771,7 @@ function save() {
 
 /* =========================================================
    SEPET SAYISI
-   ========================================================= */
+========================================================= */
 
 function updateCart() {
 
@@ -833,13 +784,13 @@ function updateCart() {
     );
 
 
-  const cartCount =
+  const element =
     $("#cartCount");
 
 
-  if (cartCount) {
+  if (element) {
 
-    cartCount.textContent =
+    element.textContent =
       count;
 
   }
@@ -849,7 +800,7 @@ function updateCart() {
 
 /* =========================================================
    SEPETİ AÇ
-   ========================================================= */
+========================================================= */
 
 function openCart() {
 
@@ -860,29 +811,24 @@ function openCart() {
 
 /* =========================================================
    MODAL
-   ========================================================= */
+========================================================= */
 
 function openModal(html) {
+
+  const body =
+    $("#modalBody");
+
 
   const modal =
     $("#modal");
 
 
-  const modalBody =
-    $("#modalBody");
-
-
-  if (
-    !modal ||
-    !modalBody
-  ) {
-
+  if (!body || !modal) {
     return;
-
   }
 
 
-  modalBody.innerHTML =
+  body.innerHTML =
     html;
 
 
@@ -912,8 +858,8 @@ function closeModal() {
 
 
 /* =========================================================
-   HESAP
-   ========================================================= */
+   HESABIM
+========================================================= */
 
 function account() {
 
@@ -923,18 +869,12 @@ function account() {
 
       <h2>
         Merhaba
-        ${
-          me.first_name ||
-          ""
-        }
+        ${me.first_name || ""}
       </h2>
 
 
       <p>
-        ${
-          me.email ||
-          ""
-        }
+        ${me.email || ""}
       </p>
 
 
@@ -955,64 +895,64 @@ function account() {
 
     `);
 
-    return;
-
   }
 
+  else {
 
-  openModal(`
+    openModal(`
 
-    <h2>
-      Hesabım
-    </h2>
-
-
-    <div class="form">
-
-      <input
-        id="le"
-        type="email"
-        placeholder="E-posta"
-      >
+      <h2>
+        Hesabım
+      </h2>
 
 
-      <input
-        id="lp"
-        type="password"
-        placeholder="Şifre"
-      >
+      <div class="form">
+
+        <input
+          id="le"
+          placeholder="E-posta"
+        >
 
 
-      <button
-        onclick="login()"
-      >
-        Giriş Yap
-      </button>
+        <input
+          id="lp"
+          type="password"
+          placeholder="Şifre"
+        >
 
 
-      <button
-        onclick="registerForm()"
-      >
-        Hesap Oluştur
-      </button>
+        <button
+          onclick="login()"
+        >
+          Giriş Yap
+        </button>
 
 
-      <button
-        onclick="forgot()"
-      >
-        Şifremi Unuttum
-      </button>
+        <button
+          onclick="registerForm()"
+        >
+          Hesap Oluştur
+        </button>
 
-    </div>
 
-  `);
+        <button
+          onclick="forgot()"
+        >
+          Şifremi Unuttum
+        </button>
+
+      </div>
+
+    `);
+
+  }
 
 }
 
 
 /* =========================================================
    GİRİŞ
-   ========================================================= */
+========================================================= */
 
 async function login() {
 
@@ -1022,8 +962,7 @@ async function login() {
       "/api/login",
       {
 
-        method:
-          "POST",
+        method: "POST",
 
         body:
           JSON.stringify({
@@ -1041,13 +980,11 @@ async function login() {
 
 
     const response =
-      await api(
-        "/api/me"
-      );
+      await api("/api/me");
 
 
     me =
-      response.user || null;
+      response.user;
 
 
     closeModal();
@@ -1075,7 +1012,7 @@ async function login() {
 
 /* =========================================================
    KAYIT FORMU
-   ========================================================= */
+========================================================= */
 
 function registerForm() {
 
@@ -1106,7 +1043,6 @@ function registerForm() {
 
       <input
         id="re"
-        type="email"
         placeholder="E-posta"
       >
 
@@ -1138,8 +1074,8 @@ function registerForm() {
 
 
 /* =========================================================
-   KAYIT
-   ========================================================= */
+   KAYIT OL
+========================================================= */
 
 async function register() {
 
@@ -1149,8 +1085,7 @@ async function register() {
       "/api/register",
       {
 
-        method:
-          "POST",
+        method: "POST",
 
         body:
           JSON.stringify({
@@ -1177,13 +1112,11 @@ async function register() {
 
 
     const response =
-      await api(
-        "/api/me"
-      );
+      await api("/api/me");
 
 
     me =
-      response.user || null;
+      response.user;
 
 
     closeModal();
@@ -1211,7 +1144,7 @@ async function register() {
 
 /* =========================================================
    ÇIKIŞ
-   ========================================================= */
+========================================================= */
 
 async function logout() {
 
@@ -1220,8 +1153,7 @@ async function logout() {
     await api(
       "/api/logout",
       {
-        method:
-          "POST"
+        method: "POST"
       }
     );
 
@@ -1249,7 +1181,7 @@ async function logout() {
 
 /* =========================================================
    ŞİFREMİ UNUTTUM
-   ========================================================= */
+========================================================= */
 
 function forgot() {
 
@@ -1264,7 +1196,6 @@ function forgot() {
 
       <input
         id="fe"
-        type="email"
         placeholder="E-posta"
       >
 
@@ -1291,8 +1222,7 @@ async function sendReset() {
         "/api/forgot-password",
         {
 
-          method:
-            "POST",
+          method: "POST",
 
           body:
             JSON.stringify({
@@ -1307,8 +1237,7 @@ async function sendReset() {
 
 
     alert(
-      response.message ||
-      "Şifre yenileme bağlantısı gönderildi."
+      response.message
     );
 
 
@@ -1329,7 +1258,7 @@ async function sendReset() {
 
 /* =========================================================
    SİPARİŞLER
-   ========================================================= */
+========================================================= */
 
 async function orders() {
 
@@ -1341,7 +1270,7 @@ async function orders() {
       );
 
 
-    const ordersList =
+    const orders =
       Array.isArray(response)
         ? response
         : response.orders || [];
@@ -1355,44 +1284,40 @@ async function orders() {
 
 
       ${
-        ordersList.length
+        orders.length
 
-          ? ordersList
-              .map(order => `
+          ? orders.map(order => `
 
-                <div
-                  class="cartline"
-                >
+              <div class="cartline">
 
-                  <span>
+                <span>
 
-                    ${order.order_no}
+                  ${order.order_no}
 
-                    <br>
+                  <br>
 
-                    <small>
-                      ${order.status}
-                    </small>
+                  <small>
+                    ${order.status}
+                  </small>
 
-                  </span>
+                </span>
 
 
-                  <b>
-                    ${fmt(order.total)}
-                  </b>
+                <b>
+                  ${fmt(order.total)}
+                </b>
 
-                </div>
+              </div>
 
-              `)
-              .join("")
+            `).join("")
 
           : `
 
-            <p>
-              Henüz sipariş yok.
-            </p>
+              <p>
+                Henüz sipariş yok.
+              </p>
 
-          `
+            `
       }
 
     `);
@@ -1412,7 +1337,7 @@ async function orders() {
 
 /* =========================================================
    SEPET MODALI
-   ========================================================= */
+========================================================= */
 
 function cartModal() {
 
@@ -1420,45 +1345,32 @@ function cartModal() {
     cart
       .map(item => {
 
-        const productItem =
+        const selectedProduct =
           products.find(
-            product =>
-              Number(product.id) ===
+            productItem =>
+              Number(productItem.id) ===
               Number(item.id)
           );
 
 
-        if (!productItem) {
+        if (!selectedProduct) {
           return "";
         }
 
 
-        const quantity =
-          Number(item.qty || 0);
-
-
-        const price =
-          Number(productItem.price || 0);
-
-
         return `
 
-          <div
-            class="cartline"
-          >
+          <div class="cartline">
 
             <span>
 
-              ${
-                productItem.name ||
-                "LÉVAREN Ürün"
-              }
+              ${selectedProduct.name}
 
               · Beden
               ${item.size || "M"}
 
               ×
-              ${quantity}
+              ${item.qty}
 
             </span>
 
@@ -1466,7 +1378,10 @@ function cartModal() {
             <b>
 
               ${fmt(
-                price * quantity
+                Number(
+                  selectedProduct.price || 0
+                ) *
+                Number(item.qty || 0)
               )}
 
             </b>
@@ -1483,10 +1398,10 @@ function cartModal() {
     cart.reduce(
       (sum, item) => {
 
-        const productItem =
+        const selectedProduct =
           products.find(
-            product =>
-              Number(product.id) ===
+            productItem =>
+              Number(productItem.id) ===
               Number(item.id)
           );
 
@@ -1494,8 +1409,9 @@ function cartModal() {
         return (
           sum +
           (
-            Number(productItem?.price) ||
-            0
+            Number(
+              selectedProduct?.price
+            ) || 0
           ) *
           Number(item.qty || 0)
         );
@@ -1536,333 +1452,4 @@ function cartModal() {
 
         ? `
 
-          <button
-            class="btn"
-            onclick="checkout()"
-          >
-            Satın Almaya Devam Et
-          </button>
-
-        `
-
-        : ""
-
-    }
-
-  `);
-
-}
-
-
-/* =========================================================
-   CHECKOUT
-   ========================================================= */
-
-function checkout() {
-
-  if (!me) {
-
-    account();
-
-    return;
-
-  }
-
-
-  openModal(`
-
-    <h2>
-      Teslimat
-    </h2>
-
-
-    <div class="form">
-
-      <input
-        id="sn"
-        value="${
-          me.first_name || ""
-        } ${
-          me.last_name || ""
-        }"
-        placeholder="Ad Soyad"
-      >
-
-
-      <input
-        id="sp"
-        value="${
-          me.phone || ""
-        }"
-        placeholder="Telefon"
-      >
-
-
-      <textarea
-        id="sa"
-        placeholder="Adres"
-      ></textarea>
-
-
-      <div class="row">
-
-        <input
-          id="sc"
-          placeholder="Şehir"
-        >
-
-
-        <input
-          id="sz"
-          placeholder="Posta Kodu"
-        >
-
-      </div>
-
-
-      <button
-        onclick="pay()"
-      >
-        Ödemeye Geç
-      </button>
-
-    </div>
-
-  `);
-
-}
-
-
-/* =========================================================
-   ÖDEME
-   ========================================================= */
-
-async function pay() {
-
-  try {
-
-    const response =
-      await api(
-        "/api/checkout",
-        {
-
-          method:
-            "POST",
-
-          body:
-            JSON.stringify({
-
-              items:
-                cart,
-
-              shipping: {
-
-                name:
-                  $("#sn").value,
-
-                phone:
-                  $("#sp").value,
-
-                address:
-                  $("#sa").value,
-
-                city:
-                  $("#sc").value,
-
-                zip:
-                  $("#sz").value
-
-              }
-
-            })
-
-        }
-      );
-
-
-    /* -----------------------------------------
-       IYZICO / ÖDEME
-    ----------------------------------------- */
-
-    if (
-      response.paymentConfigured
-    ) {
-
-      openModal(`
-
-        <h2>
-          Güvenli Ödeme
-        </h2>
-
-
-        <div
-          id="iyzipay-checkout-form"
-          class="responsive"
-        ></div>
-
-
-        ${
-          response.checkoutFormContent ||
-          ""
-        }
-
-      `);
-
-    }
-
-    /* -----------------------------------------
-       ÖDEME YAPILMADAN SİPARİŞ
-    ----------------------------------------- */
-
-    else {
-
-      cart = [];
-
-
-      save();
-
-
-      openModal(`
-
-        <h2>
-          Sipariş oluşturuldu
-        </h2>
-
-
-        <p>
-          ${
-            response.message ||
-            "Siparişiniz başarıyla oluşturuldu."
-          }
-        </p>
-
-
-        <p>
-
-          Sipariş no:
-
-          <b>
-            ${
-              response.orderNo ||
-              "-"
-            }
-          </b>
-
-        </p>
-
-      `);
-
-    }
-
-  }
-
-  catch (error) {
-
-    alert(
-      error.message
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   DIŞARI TIKLAYINCA MODALI KAPAT
-   ========================================================= */
-
-document.addEventListener(
-  "click",
-  event => {
-
-    const modal =
-      $("#modal");
-
-
-    if (
-      !modal ||
-      modal.classList.contains("hidden")
-    ) {
-      return;
-    }
-
-
-    if (
-      event.target === modal
-    ) {
-
-      closeModal();
-
-    }
-
-  }
-);
-
-
-/* =========================================================
-   ESC İLE MODAL KAPAT
-   ========================================================= */
-
-document.addEventListener(
-  "keydown",
-  event => {
-
-    if (
-      event.key === "Escape"
-    ) {
-
-      closeModal();
-
-    }
-
-  }
-);
-
-
-/* =========================================================
-   SAYFA HAZIR
-   ========================================================= */
-
-document.addEventListener(
-  "DOMContentLoaded",
-  () => {
-
-    /* Hesabım */
-
-    const accountBtn =
-      $("#accountBtn");
-
-
-    if (accountBtn) {
-
-      accountBtn.onclick =
-        () => account();
-
-    }
-
-
-    /* Sepet */
-
-    const cartBtn =
-      $("#cartBtn");
-
-
-    if (cartBtn) {
-
-      cartBtn.onclick =
-        () => cartModal();
-
-    }
-
-
-    /* Filtreler */
-
-    setupFilters();
-
-
-    /* Siteyi başlat */
-
-    boot();
-
-  }
-);
+          
