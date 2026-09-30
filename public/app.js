@@ -63,11 +63,6 @@ async function boot() {
       await api("/api/products");
 
 
-    /*
-      API farklı şekillerde ürün
-      döndürse bile yakala.
-    */
-
     if (Array.isArray(productResponse)) {
 
       products = productResponse;
@@ -237,8 +232,7 @@ function render(list) {
 
 
   /* =========================
-     PUBLIC KLASÖRÜNDEKİ
-     ÜRÜN GÖRSELLERİ
+     LÉVAREN ÜRÜN GÖRSELLERİ
   ========================= */
 
   const imageMap = {
@@ -271,15 +265,9 @@ function render(list) {
         Number(p.id);
 
 
-      /*
-        ÜRÜN ID'SİNE GÖRE
-        PUBLIC KLASÖRÜNDEKİ
-        GÖRSELİ KULLAN.
-      */
-
       const image =
-        imageMap[id] ||
         p.image ||
+        imageMap[id] ||
         "/premium-gomlek.jpg";
 
 
@@ -301,12 +289,7 @@ function render(list) {
           <div
             class="pic ai-pic"
             style="
-              background-image:
-                url('${image}');
-              background-size: cover;
-              background-position: center;
-              background-repeat: no-repeat;
-              min-height: 340px;
+              background-image:url('${image}');
             "
           ></div>
 
