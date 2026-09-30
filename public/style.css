@@ -5,3 +5,73 @@
 .sizes{display:flex;gap:8px;margin:8px 0 18px}.size-btn{border:1px solid #bbb;padding:10px 13px;font-size:11px;background:transparent}.size-btn.selected{background:#171716;color:#fff;border-color:#171716}.form label{font-size:11px;letter-spacing:1px}
 
 .size-btn:disabled{opacity:.35;cursor:not-allowed}.size-btn small{font-size:8px}
+/* =========================================
+   ÜRÜN FOTOĞRAFLARI - DÜZELTME
+   ========================================= */
+
+.ai-pic {
+  position: relative !important;
+
+  width: 100% !important;
+  height: 100% !important;
+
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+
+  overflow: hidden !important;
+
+  clip-path: none !important;
+  transform: none !important;
+}
+
+/* Fotoğrafın üzerine gelen gri şekli kaldır */
+.ai-pic::before,
+.ai-pic::after {
+  content: none !important;
+
+  display: none !important;
+
+  background: none !important;
+
+  clip-path: none !important;
+
+  transform: none !important;
+
+  opacity: 0 !important;
+}
+
+/* Kartın kendisinde de şekil/maske olmasın */
+.card,
+.card::before,
+.card::after {
+  clip-path: none !important;
+}
+
+/* Mobilde ürünler düzgün görünsün */
+@media (max-width: 768px) {
+
+  #productGrid {
+    display: grid !important;
+
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr)) !important;
+
+    gap: 18px !important;
+  }
+
+  .card {
+    width: 100% !important;
+
+    min-width: 0 !important;
+  }
+
+  .ai-pic {
+    width: 100% !important;
+
+    aspect-ratio: 3 / 4 !important;
+
+    height: auto !important;
+  }
+
+}
