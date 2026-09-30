@@ -75,3 +75,17 @@
   }
 
 }
+.ai-pic img {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+.ai-pic {
+  background: #ddd !important;
+  overflow: hidden !important;
+}
