@@ -10,9 +10,9 @@ let cart = JSON.parse(
 let me = null;
 
 
-/* =========================
+/* =====================================================
    YARDIMCI
-========================= */
+===================================================== */
 
 const $ = s => document.querySelector(s);
 
@@ -24,9 +24,9 @@ const fmt = n =>
   }).format(Number(n) || 0);
 
 
-/* =========================
+/* =====================================================
    API
-========================= */
+===================================================== */
 
 async function api(url, opt = {}) {
 
@@ -38,8 +38,7 @@ async function api(url, opt = {}) {
     ...opt
   });
 
-  const d =
-    await r.json().catch(() => ({}));
+  const d = await r.json().catch(() => ({}));
 
   if (!r.ok) {
     throw Error(
@@ -51,9 +50,9 @@ async function api(url, opt = {}) {
 }
 
 
-/* =========================
+/* =====================================================
    ÜRÜN GÖRSELLERİ
-========================= */
+===================================================== */
 
 const imageMap = {
 
@@ -72,26 +71,26 @@ const imageMap = {
 };
 
 
-/* =========================
-   GÖRSELİ BUL
-========================= */
+/* =====================================================
+   GÖRSEL URL'Sİ
+===================================================== */
 
 function getProductImage(product) {
 
-  if (!product) {
-    return "/premium-gomlek.jpg";
+  if (
+    product &&
+    product.image &&
+    String(product.image).trim()
+  ) {
+
+    return String(product.image).trim();
+
   }
 
   const id =
-    Number(product.id);
-
-  /*
-    Önce API'den gelen görseli kullan.
-    Yoksa bizim sabit görsel haritamızı kullan.
-  */
+    Number(product?.id);
 
   return (
-    product.image ||
     imageMap[id] ||
     "/premium-gomlek.jpg"
   );
@@ -99,9 +98,9 @@ function getProductImage(product) {
 }
 
 
-/* =========================
+/* =====================================================
    SAYFAYI BAŞLAT
-========================= */
+===================================================== */
 
 async function boot() {
 
@@ -113,8 +112,7 @@ async function boot() {
 
     if (Array.isArray(productResponse)) {
 
-      products =
-        productResponse;
+      products = productResponse;
 
     } else if (
       Array.isArray(productResponse.products)
@@ -143,9 +141,9 @@ async function boot() {
     );
 
 
-    /*
-      Kullanıcı kontrolü
-    */
+    /* -----------------------------
+       KULLANICI
+    ----------------------------- */
 
     try {
 
@@ -206,7 +204,6 @@ async function boot() {
             Koleksiyon yüklenemedi.
           </p>
 
-
           <p
             style="
               color:#777;
@@ -216,7 +213,6 @@ async function boot() {
           >
             Sunucu bağlantısı kontrol ediliyor.
           </p>
-
 
           <button
             class="btn"
@@ -237,9 +233,9 @@ async function boot() {
 }
 
 
-/* =========================
+/* =====================================================
    ÜRÜNLERİ GÖSTER
-========================= */
+===================================================== */
 
 function render(list) {
 
@@ -267,11 +263,7 @@ function render(list) {
         "
       >
 
-        <p
-          style="
-            font-size:18px;
-          "
-        >
+        <p style="font-size:18px;">
           Bu kategoride ürün bulunamadı.
         </p>
 
@@ -284,25 +276,14 @@ function render(list) {
   }
 
 
-  /*
-    ÜRÜNLERİ OLUŞTUR
-
-    ÖNEMLİ:
-    Fotoğraf artık background-image değil.
-
-    Gerçek <img> kullanıyoruz.
-  */
-
   grid.innerHTML =
     list.map(p => {
 
       const id =
         Number(p.id);
 
-
       const image =
         getProductImage(p);
-
 
       const categoryName =
         p.category === "ust"
@@ -320,34 +301,30 @@ function render(list) {
         >
 
           <div
-            class="pic"
+            class="pic ai-pic"
             style="
-              width:100%;
-              aspect-ratio:3/4;
-              overflow:hidden;
-              background:#ddd;
               position:relative;
+              overflow:hidden;
+              aspect-ratio:3/4;
+              background:#e8e3db;
             "
           >
 
             <img
-              class="product-image"
+              class="levaren-product-image"
               src="${image}"
               alt="${p.name || "LÉVAREN Ürün"}"
-
               loading="lazy"
-
+              decoding="async"
+              onerror="this.onerror=null;this.src='/premium-gomlek.jpg';"
               style="
-                display:block;
+                position:absolute;
+                inset:0;
                 width:100%;
                 height:100%;
+                display:block;
                 object-fit:cover;
                 object-position:center;
-              "
-
-              onerror="
-                this.onerror=null;
-                this.src='/premium-gomlek.jpg';
               "
             >
 
@@ -361,7 +338,6 @@ function render(list) {
               <div>
                 ${p.name || "LÉVAREN Ürün"}
               </div>
-
 
               <div class="meta">
 
@@ -390,18 +366,41 @@ function render(list) {
 
     }).join("");
 
+
+  /* -----------------------------------------
+     FOTOĞRAFLARIN CSS ŞEKİLLERİ TARAFINDAN
+     BOZULMASINI ENGELLE
+  ----------------------------------------- */
+
+  document
+    .querySelectorAll(
+      ".levaren-product-image"
+    )
+    .forEach(img => {
+
+      img.style.position = "absolute";
+      img.style.inset = "0";
+      img.style.width = "100%";
+      img.style.height = "100%";
+      img.style.display = "block";
+      img.style.objectFit = "cover";
+      img.style.objectPosition = "center";
+
+    });
+
 }
 
 
-/* =========================
+/* =====================================================
    ÜRÜN DETAY
-========================= */
+===================================================== */
 
 function product(id) {
 
   const p =
     products.find(
-      x => Number(x.id) === Number(id)
+      x =>
+        Number(x.id) === Number(id)
     );
 
 
@@ -442,28 +441,22 @@ function product(id) {
 
     <div
       style="
-        width:100%;
         margin-bottom:20px;
+        background:#e8e3db;
         overflow:hidden;
-        background:#ddd;
       "
     >
 
       <img
         src="${image}"
         alt="${p.name || "LÉVAREN Ürün"}"
-
+        onerror="this.onerror=null;this.src='/premium-gomlek.jpg';"
         style="
-          display:block;
           width:100%;
           aspect-ratio:3/4;
           object-fit:cover;
           object-position:center;
-        "
-
-        onerror="
-          this.onerror=null;
-          this.src='/premium-gomlek.jpg';
+          display:block;
         "
       >
 
@@ -504,7 +497,6 @@ function product(id) {
           <button
             type="button"
             data-size="${x.size}"
-
             class="size-btn ${
               x.size === firstAvailable
                 ? "selected"
@@ -574,9 +566,9 @@ function product(id) {
 }
 
 
-/* =========================
+/* =====================================================
    BEDEN SEÇ
-========================= */
+===================================================== */
 
 function pickSize(id, size) {
 
@@ -596,9 +588,9 @@ function pickSize(id, size) {
 }
 
 
-/* =========================
+/* =====================================================
    FİLTRELER
-========================= */
+===================================================== */
 
 function setupFilters() {
 
@@ -656,9 +648,9 @@ function setupFilters() {
 }
 
 
-/* =========================
+/* =====================================================
    KOLEKSİYONA GİT
-========================= */
+===================================================== */
 
 function goToCollection() {
 
@@ -674,7 +666,9 @@ function goToCollection() {
 
 
   const header =
-    document.querySelector("header");
+    document.querySelector(
+      "header"
+    );
 
 
   const headerHeight =
@@ -718,9 +712,9 @@ function goToCollection() {
 }
 
 
-/* =========================
+/* =====================================================
    SEPETE EKLE
-========================= */
+===================================================== */
 
 function add(
   id,
@@ -766,9 +760,9 @@ function add(
 }
 
 
-/* =========================
+/* =====================================================
    SEPETİ KAYDET
-========================= */
+===================================================== */
 
 function save() {
 
@@ -783,9 +777,9 @@ function save() {
 }
 
 
-/* =========================
+/* =====================================================
    SEPET SAYISI
-========================= */
+===================================================== */
 
 function updateCart() {
 
@@ -811,9 +805,9 @@ function updateCart() {
 }
 
 
-/* =========================
+/* =====================================================
    SEPETİ AÇ
-========================= */
+===================================================== */
 
 function openCart() {
 
@@ -822,9 +816,9 @@ function openCart() {
 }
 
 
-/* =========================
+/* =====================================================
    MODAL
-========================= */
+===================================================== */
 
 function openModal(html) {
 
@@ -874,9 +868,9 @@ function closeModal() {
 }
 
 
-/* =========================
+/* =====================================================
    HESAP
-========================= */
+===================================================== */
 
 function account() {
 
@@ -964,9 +958,9 @@ function account() {
 }
 
 
-/* =========================
+/* =====================================================
    GİRİŞ
-========================= */
+===================================================== */
 
 async function login() {
 
@@ -1023,9 +1017,9 @@ async function login() {
 }
 
 
-/* =========================
+/* =====================================================
    KAYIT FORMU
-========================= */
+===================================================== */
 
 function registerForm() {
 
@@ -1086,9 +1080,9 @@ function registerForm() {
 }
 
 
-/* =========================
+/* =====================================================
    KAYIT
-========================= */
+===================================================== */
 
 async function register() {
 
@@ -1154,9 +1148,9 @@ async function register() {
 }
 
 
-/* =========================
+/* =====================================================
    ÇIKIŞ
-========================= */
+===================================================== */
 
 async function logout() {
 
@@ -1190,9 +1184,9 @@ async function logout() {
 }
 
 
-/* =========================
+/* =====================================================
    ŞİFRE UNUTTUM
-========================= */
+===================================================== */
 
 function forgot() {
 
@@ -1266,9 +1260,9 @@ async function sendReset() {
 }
 
 
-/* =========================
+/* =====================================================
    SİPARİŞLER
-========================= */
+===================================================== */
 
 async function orders() {
 
@@ -1346,9 +1340,9 @@ async function orders() {
 }
 
 
-/* =========================
+/* =====================================================
    SEPET
-========================= */
+===================================================== */
 
 function cartModal() {
 
@@ -1475,137 +1469,4 @@ function cartModal() {
 }
 
 
-/* =========================
-   CHECKOUT
-========================= */
-
-function checkout() {
-
-  if (!me) {
-
-    account();
-
-    return;
-
-  }
-
-
-  openModal(`
-
-    <h2>
-      Teslimat
-    </h2>
-
-
-    <div class="form">
-
-      <input
-        id="sn"
-        value="${me.first_name || ""} ${me.last_name || ""}"
-        placeholder="Ad Soyad"
-      >
-
-
-      <input
-        id="sp"
-        value="${me.phone || ""}"
-        placeholder="Telefon"
-      >
-
-
-      <textarea
-        id="sa"
-        placeholder="Adres"
-      ></textarea>
-
-
-      <div class="row">
-
-        <input
-          id="sc"
-          placeholder="Şehir"
-        >
-
-
-        <input
-          id="sz"
-          placeholder="Posta Kodu"
-        >
-
-      </div>
-
-
-      <button
-        onclick="pay()"
-      >
-        Ödemeye Geç
-      </button>
-
-    </div>
-
-  `);
-
-}
-
-
-/* =========================
-   ÖDEME
-========================= */
-
-async function pay() {
-
-  try {
-
-    const d =
-      await api(
-        "/api/checkout",
-        {
-
-          method: "POST",
-
-          body:
-            JSON.stringify({
-
-              items:
-                cart,
-
-              shipping: {
-
-                name:
-                  $("#sn").value,
-
-                phone:
-                  $("#sp").value,
-
-                address:
-                  $("#sa").value,
-
-                city:
-                  $("#sc").value,
-
-                zip:
-                  $("#sz").value
-
-              }
-
-            })
-
-        }
-      );
-
-
-    if (
-      d.paymentConfigured
-    ) {
-
-      openModal(`
-
-        <h2>
-          Güvenli Ödeme
-        </h2>
-
-
-        <div
-          id="iyzipay-checkout-form"
-          class="responsive"
-  
+/* ============================================  
