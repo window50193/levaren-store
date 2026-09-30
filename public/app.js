@@ -25,6 +25,20 @@ const fmt = n =>
 
 
 /* =========================
+   ÜRÜN GÖRSELLERİ
+========================= */
+
+const imageMap = {
+  1: "/premium-gomlek.jpg",
+  2: "/premium-kumas-pantolon.jpg",
+  3: "/basic-slim-fit-gomlek.jpg",
+  4: "/premium-triko.jpg",
+  5: "/premium-blazer-ceket.jpg",
+  6: "/klasik-gomlek.jpg"
+};
+
+
+/* =========================
    API
 ========================= */
 
@@ -42,12 +56,50 @@ async function api(url, opt = {}) {
     await r.json().catch(() => ({}));
 
   if (!r.ok) {
+
     throw Error(
       d.error || "İşlem başarısız"
     );
+
   }
 
   return d;
+
+}
+
+
+/* =========================
+   ÜRÜN GÖRSELİNİ BUL
+========================= */
+
+function getProductImage(product) {
+
+  const id =
+    Number(product?.id);
+
+  /*
+    ÖNCE bizim public klasöründeki
+    kesin dosyayı kullan.
+  */
+
+  if (imageMap[id]) {
+    return imageMap[id];
+  }
+
+  /*
+    Eğer yeni bir ürün eklenirse
+    API'deki resmi kullan.
+  */
+
+  if (
+    product?.image &&
+    typeof product.image === "string"
+  ) {
+    return product.image;
+  }
+
+  return "/premium-gomlek.jpg";
+
 }
 
 
@@ -65,7 +117,8 @@ async function boot() {
 
     if (Array.isArray(productResponse)) {
 
-      products = productResponse;
+      products =
+        productResponse;
 
     } else if (
       Array.isArray(productResponse.products)
@@ -118,7 +171,6 @@ async function boot() {
     updateCart();
 
     setupFilters();
-
 
   } catch (error) {
 
@@ -231,33 +283,6 @@ function render(list) {
   }
 
 
-  /* =========================
-     LÉVAREN ÜRÜN GÖRSELLERİ
-  ========================= */
-
-  const imageMap = {
-
-    1:
-      "/premium-gomlek.jpg",
-
-    2:
-      "/premium-kumas-pantolon.jpg",
-
-    3:
-      "/basic-slim-fit-gomlek.jpg",
-
-    4:
-      "/premium-triko.jpg",
-
-    5:
-      "/premium-blazer-ceket.jpg",
-
-    6:
-      "/klasik-gomlek.jpg"
-
-  };
-
-
   grid.innerHTML =
     list.map(p => {
 
@@ -266,9 +291,7 @@ function render(list) {
 
 
       const image =
-        p.image ||
-        imageMap[id] ||
-        "/premium-gomlek.jpg";
+        getProductImage(p);
 
 
       const categoryName =
@@ -288,10 +311,19 @@ function render(list) {
 
           <div
             class="pic ai-pic"
-            style="
-              background-image:url('${image}');
-            "
-          ></div>
+          >
+
+            <img
+              src="${image}"
+              alt="${p.name || "LÉVAREN Ürün"}"
+              loading="lazy"
+              onerror="
+                this.onerror=null;
+                this.src='/premium-gomlek.jpg';
+              "
+            >
+
+          </div>
 
 
           <div class="info">
@@ -341,13 +373,18 @@ function product(id) {
 
   const p =
     products.find(
-      x => Number(x.id) === Number(id)
+      x =>
+        Number(x.id) === Number(id)
     );
 
 
   if (!p) {
     return;
   }
+
+
+  const image =
+    getProductImage(p);
 
 
   const sizes =
@@ -370,11 +407,23 @@ function product(id) {
 
   const firstAvailable =
     sizes.find(
-      x => Number(x.stock) > 0
+      x =>
+        Number(x.stock) > 0
     )?.size;
 
 
   openModal(`
+
+    <img
+      class="product-modal-img"
+      src="${image}"
+      alt="${p.name || "LÉVAREN Ürün"}"
+      onerror="
+        this.onerror=null;
+        this.src='/premium-gomlek.jpg';
+      "
+    >
+
 
     <h2>
       ${p.name || "Ürün"}
@@ -579,7 +628,9 @@ function goToCollection() {
 
 
   const header =
-    document.querySelector("header");
+    document.querySelector(
+      "header"
+    );
 
 
   const headerHeight =
@@ -614,9 +665,11 @@ function goToCollection() {
 
   window.scrollTo({
 
-    top: Math.max(0, top),
+    top:
+      Math.max(0, top),
 
-    behavior: "smooth"
+    behavior:
+      "smooth"
 
   });
 
@@ -653,11 +706,14 @@ function add(
 
     cart.push({
 
-      id: Number(id),
+      id:
+        Number(id),
 
-      qty: 1,
+      qty:
+        1,
 
-      size: normalized
+      size:
+        normalized
 
     });
 
@@ -697,7 +753,8 @@ function updateCart() {
   const count =
     cart.reduce(
       (a, x) =>
-        a + Number(x.qty || 0),
+        a +
+        Number(x.qty || 0),
       0
     );
 
@@ -792,7 +849,8 @@ function account() {
       ? `
 
         <h2>
-          Merhaba ${me.first_name || ""}
+          Merhaba
+          ${me.first_name || ""}
         </h2>
 
 
@@ -881,7 +939,8 @@ async function login() {
       "/api/login",
       {
 
-        method: "POST",
+        method:
+          "POST",
 
         body:
           JSON.stringify({
@@ -1003,7 +1062,8 @@ async function register() {
       "/api/register",
       {
 
-        method: "POST",
+        method:
+          "POST",
 
         body:
           JSON.stringify({
@@ -1070,7 +1130,8 @@ async function logout() {
     await api(
       "/api/logout",
       {
-        method: "POST"
+        method:
+          "POST"
       }
     );
 
@@ -1138,7 +1199,8 @@ async function sendReset() {
         "/api/forgot-password",
         {
 
-          method: "POST",
+          method:
+            "POST",
 
           body:
             JSON.stringify({
@@ -1466,7 +1528,8 @@ async function pay() {
         "/api/checkout",
         {
 
-          method: "POST",
+          method:
+            "POST",
 
           body:
             JSON.stringify({
@@ -1565,7 +1628,7 @@ async function pay() {
 
 
 /* =========================
-   BUTONLARI BAĞLA
+   SAYFA AÇILINCA
 ========================= */
 
 document.addEventListener(
