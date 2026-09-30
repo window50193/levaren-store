@@ -1101,4 +1101,510 @@ async function logout() {
 }
 
 
-/* =================
+/* =========================
+   ŞİFRE UNUTTUM
+========================= */
+
+function forgot() {
+
+  openModal(`
+
+    <h2>
+      Şifre yenile
+    </h2>
+
+
+    <div class="form">
+
+      <input
+        id="fe"
+        placeholder="E-posta"
+      >
+
+
+      <button
+        onclick="sendReset()"
+      >
+        Bağlantı Gönder
+      </button>
+
+    </div>
+
+  `);
+
+}
+
+
+async function sendReset() {
+
+  try {
+
+    const d =
+      await api(
+        "/api/forgot-password",
+        {
+
+          method: "POST",
+
+          body:
+            JSON.stringify({
+
+              email:
+                $("#fe").value
+
+            })
+
+        }
+      );
+
+
+    alert(
+      d.message
+    );
+
+
+    closeModal();
+
+
+  } catch (e) {
+
+    alert(
+      e.message
+    );
+
+  }
+
+}
+
+
+/* =========================
+   SİPARİŞLER
+========================= */
+
+async function orders() {
+
+  try {
+
+    const response =
+      await api(
+        "/api/orders"
+      );
+
+
+    const os =
+      Array.isArray(response)
+        ? response
+        : response.orders || [];
+
+
+    openModal(`
+
+      <h2>
+        Siparişlerim
+      </h2>
+
+
+      ${
+        os.length
+
+          ? os.map(o => `
+
+              <div
+                class="cartline"
+              >
+
+                <span>
+
+                  ${o.order_no}
+
+                  <br>
+
+                  <small>
+                    ${o.status}
+                  </small>
+
+                </span>
+
+
+                <b>
+                  ${fmt(o.total)}
+                </b>
+
+              </div>
+
+            `).join("")
+
+          : `
+
+            <p>
+              Henüz sipariş yok.
+            </p>
+
+          `
+      }
+
+    `);
+
+
+  } catch (e) {
+
+    alert(
+      e.message
+    );
+
+  }
+
+}
+
+
+/* =========================
+   SEPET
+========================= */
+
+function cartModal() {
+
+  const rows =
+    cart
+      .map(i => {
+
+        const p =
+          products.find(
+            x =>
+              Number(x.id) ===
+              Number(i.id)
+          );
+
+
+        return p
+
+          ? `
+
+            <div
+              class="cartline"
+            >
+
+              <span>
+
+                ${p.name}
+
+                · Beden
+                ${i.size || "M"}
+
+                × ${i.qty}
+
+              </span>
+
+
+              <b>
+
+                ${fmt(
+                  Number(p.price || 0) *
+                  Number(i.qty || 0)
+                )}
+
+              </b>
+
+            </div>
+
+          `
+
+          : "";
+
+      })
+      .join("");
+
+
+  const total =
+    cart.reduce(
+      (sum, i) => {
+
+        const p =
+          products.find(
+            x =>
+              Number(x.id) ===
+              Number(i.id)
+          );
+
+
+        return (
+          sum +
+          (Number(p?.price) || 0) *
+          Number(i.qty || 0)
+        );
+
+      },
+      0
+    );
+
+
+  openModal(`
+
+    <h2>
+      Sepetim
+    </h2>
+
+
+    ${
+      rows ||
+      "<p>Sepet boş.</p>"
+    }
+
+
+    <hr>
+
+
+    <p>
+
+      <b>
+        Toplam:
+        ${fmt(total)}
+      </b>
+
+    </p>
+
+
+    ${
+      cart.length
+
+        ? `
+
+          <button
+            class="btn"
+            onclick="checkout()"
+          >
+            Satın Almaya Devam Et
+          </button>
+
+        `
+
+        : ""
+
+    }
+
+  `);
+
+}
+
+
+/* =========================
+   CHECKOUT
+========================= */
+
+function checkout() {
+
+  if (!me) {
+
+    account();
+
+    return;
+
+  }
+
+
+  openModal(`
+
+    <h2>
+      Teslimat
+    </h2>
+
+
+    <div class="form">
+
+      <input
+        id="sn"
+        value="${me.first_name || ""} ${me.last_name || ""}"
+        placeholder="Ad Soyad"
+      >
+
+
+      <input
+        id="sp"
+        value="${me.phone || ""}"
+        placeholder="Telefon"
+      >
+
+
+      <textarea
+        id="sa"
+        placeholder="Adres"
+      ></textarea>
+
+
+      <div class="row">
+
+        <input
+          id="sc"
+          placeholder="Şehir"
+        >
+
+
+        <input
+          id="sz"
+          placeholder="Posta Kodu"
+        >
+
+      </div>
+
+
+      <button
+        onclick="pay()"
+      >
+        Ödemeye Geç
+      </button>
+
+    </div>
+
+  `);
+
+}
+
+
+/* =========================
+   ÖDEME
+========================= */
+
+async function pay() {
+
+  try {
+
+    const d =
+      await api(
+        "/api/checkout",
+        {
+
+          method: "POST",
+
+          body:
+            JSON.stringify({
+
+              items:
+                cart,
+
+              shipping: {
+
+                name:
+                  $("#sn").value,
+
+                phone:
+                  $("#sp").value,
+
+                address:
+                  $("#sa").value,
+
+                city:
+                  $("#sc").value,
+
+                zip:
+                  $("#sz").value
+
+              }
+
+            })
+
+        }
+      );
+
+
+    if (
+      d.paymentConfigured
+    ) {
+
+      openModal(`
+
+        <h2>
+          Güvenli Ödeme
+        </h2>
+
+
+        <div
+          id="iyzipay-checkout-form"
+          class="responsive"
+        ></div>
+
+
+        ${d.checkoutFormContent}
+
+      `);
+
+    } else {
+
+      cart = [];
+
+      save();
+
+
+      openModal(`
+
+        <h2>
+          Sipariş oluşturuldu
+        </h2>
+
+
+        <p>
+          ${d.message}
+        </p>
+
+
+        <p>
+          Sipariş no:
+
+          <b>
+            ${d.orderNo}
+          </b>
+
+        </p>
+
+      `);
+
+    }
+
+
+  } catch (e) {
+
+    alert(
+      e.message
+    );
+
+  }
+
+}
+
+
+/* =========================
+   BUTONLARI BAĞLA
+========================= */
+
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+
+    const accountBtn =
+      $("#accountBtn");
+
+
+    if (accountBtn) {
+
+      accountBtn.onclick =
+        () => account();
+
+    }
+
+
+    const cartBtn =
+      $("#cartBtn");
+
+
+    if (cartBtn) {
+
+      cartBtn.onclick =
+        () => cartModal();
+
+    }
+
+
+    setupFilters();
+
+    boot();
+
+  }
+);
